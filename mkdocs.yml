@@ -14,7 +14,8 @@ plugins:
             members_order: source
             docstring_options:
               ignore_init_summary: true
-            merge_init_into_class: false  - autorefs
+            merge_init_into_class: true
+  - autorefs
   - api-autonav:
       modules: ['src/rational_functions']
 # Math support

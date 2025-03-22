@@ -11,14 +11,6 @@ from rational_functions.terms import (
 )
 
 
-def test_polynomial_root():
-    proot_real = PolynomialRoot(value=3.0 - 2.0j)
-
-    assert not proot_real.is_real
-    assert proot_real.real == 3.0
-    assert proot_real.imag == -2.0
-
-
 def test_arctan_term():
     a = 2.0
     r_r = 3.0

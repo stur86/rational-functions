@@ -1,3 +1,4 @@
+"""Type definitions for rational functions."""
 import numpy as np
 from numpy.polynomial import Polynomial
 from numpy.typing import ArrayLike
@@ -6,34 +7,46 @@ from dataclasses import dataclass
 PolyDefType = ArrayLike | Polynomial
 
 
-@dataclass
+@dataclass(frozen=True)
 class PolynomialRoot:
+    """Defines a polynomial root with value, multiplicity,
+    and supports complex conjugate pairs of roots.
+    """
+    
     value: complex
     multiplicity: int = 1
     is_complex_pair: bool = False
-
+    
+    def __post_init__(self):
+        if self.is_complex_pair:
+            assert not self.is_real, "Complex pair roots must be complex."
+    
     @property
     def is_real(self) -> bool:
+        """Check if the root is real."""
         return np.isreal(self.value)
 
     @property
     def real(self) -> float:
+        """Return the real part of the root."""
         return np.real(self.value)
 
     @property
     def imag(self) -> float:
+        """Return the imaginary part of the root."""
         return np.imag(self.value)
+    
+    def monic_polynomial(self) -> Polynomial:
+        """Return the monic polynomial for the root."""
+        if self.is_complex_pair:
+            return Polynomial([self.real**2 + self.imag**2, -2 * self.real, 1.0])
+        return Polynomial([-self.value, 1.0])
 
     def with_multiplicity(self, multiplicity: int) -> "PolynomialRoot":
+        """Return a new PolynomialRoot with a different multiplicity."""
         return PolynomialRoot(
             value=self.value,
             multiplicity=multiplicity,
             is_complex_pair=self.is_complex_pair,
         )
 
-
-def coerce_to_polynomial(arg: PolyDefType) -> Polynomial:
-    if isinstance(arg, Polynomial):
-        return arg.copy()
-    else:
-        return Polynomial(arg)
