@@ -1,0 +1,29 @@
+site_name: Rational Functions Documentation
+site_url: https://mydomain.org/mysite
+theme:
+  name: material
+  palette:
+    scheme: slate
+    primary: deep orange
+plugins:
+  - search
+  - mkdocstrings:
+      handlers:
+        python:
+          options:
+            members_order: source
+            docstring_options:
+              ignore_init_summary: true
+            merge_init_into_class: false  - autorefs
+  - api-autonav:
+      modules: ['src/rational_functions']
+# Math support
+markdown_extensions:
+  - pymdownx.arithmatex:
+      generic: true
+extra_javascript:
+  - javascript/katex.js
+  - https://unpkg.com/katex@0/dist/katex.min.js
+  - https://unpkg.com/katex@0/dist/contrib/auto-render.min.js
+extra_css:
+  - https://unpkg.com/katex@0/dist/katex.min.css
