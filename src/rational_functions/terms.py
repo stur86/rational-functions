@@ -9,7 +9,7 @@ RationalIntegralGeneralTerm = Union["RationalIntegralTermBase", "RationalTermBas
 
 
 class RationalTermBase(ABC):
-    """Base class for a single term in a proper rational function."""  
+    """Base class for a single term in a proper rational function."""
 
     _root: PolynomialRoot
     _coefs: ArrayLike
@@ -48,7 +48,7 @@ class RationalTermBase(ABC):
     @property
     def denominator(self) -> Polynomial:
         """Return the denominator of the term."""
-        raise NotImplementedError("Denominator property not implemented in base class")
+        return self._root.monic_polynomial()
 
 
 class RationalTermSingle(RationalTermBase):
@@ -116,11 +116,6 @@ class RationalTermSingle(RationalTermBase):
             r_i = r.with_multiplicity(r.multiplicity - 1)
             a = -self._coefs[0] / r_i.multiplicity
             return (RationalTermSingle(r_i, [a]),)
-
-    @property
-    def denominator(self) -> Polynomial:
-        """Return the denominator of the term."""
-        return Polynomial([-self._root.value, 1]) ** self._root.multiplicity
 
 
 class RationalTermComplexPair(RationalTermBase):
@@ -235,12 +230,6 @@ class RationalTermComplexPair(RationalTermBase):
                 a *= (2 * k - 1) / (2 * m**2 * k)
 
         return tuple(int_terms)
-
-    @property
-    def denominator(self) -> Polynomial:
-        """Return the denominator of the term."""
-        r = self._root
-        return (Polynomial([-r.real, 1]) ** 2 + r.imag**2) ** r.multiplicity
 
 
 class RationalTerm(RationalTermBase):
