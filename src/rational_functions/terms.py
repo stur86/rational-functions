@@ -9,7 +9,7 @@ RationalIntegralGeneralTerm = Union["RationalIntegralTermBase", "RationalTermBas
 
 
 class RationalTermBase(ABC):
-    """Base class for a single term in a proper rational function."""
+    """Base class for a single term in a proper rational function."""  
 
     _root: PolynomialRoot
     _coefs: ArrayLike

@@ -18,34 +18,38 @@ def test_polynomial_root():
     assert proot_real.real == 3.0
     assert proot_real.imag == -2.0
 
+
 def test_arctan_term():
     a = 2.0
     r_r = 3.0
     r_i = 1.5
-    atant = RationalIntegralArctanTerm(a, r_r+r_i*1j)
-    
+    atant = RationalIntegralArctanTerm(a, r_r + r_i * 1j)
+
     x = np.linspace(-1, 1, 100)
-    
-    assert np.allclose(atant(x), a/r_i*np.arctan((x-r_r)/r_i))
-    
+
+    assert np.allclose(atant(x), a / r_i * np.arctan((x - r_r) / r_i))
+
+
 def test_log_term():
     a = 2.0
-    r = 3.0+1.5j
+    r = 3.0 + 1.5j
     logt = RationalIntegralLogTerm(a, r)
-    
+
     x = np.linspace(-1, 1, 100, dtype=np.complex128)
-    
-    assert np.allclose(logt(x), a*np.log(x-r))
-    
+
+    assert np.allclose(logt(x), a * np.log(x - r))
+
+
 def test_log_pair_term():
     a = 2.0
     r_r = 3.0
     r_i = 1.5
-    logpt = RationalIntegralLogPairTerm(a, r_r+r_i*1j)
-    
+    logpt = RationalIntegralLogPairTerm(a, r_r + r_i * 1j)
+
     x = np.linspace(-1, 1, 100, dtype=np.complex128)
-    
-    assert np.allclose(logpt(x), 0.5*a*np.log((x-r_r)**2+r_i**2))
+
+    assert np.allclose(logpt(x), 0.5 * a * np.log((x - r_r) ** 2 + r_i**2))
+
 
 @pytest.mark.parametrize(
     "root",

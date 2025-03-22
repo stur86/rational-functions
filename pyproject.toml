@@ -23,4 +23,11 @@ dev = [
     "mkdocstrings>=0.29.0",
     "pytest>=8.3.5",
     "ruff>=0.11.2",
+    "taskipy>=1.14.1",
 ]
+
+[tool.taskipy.tasks]
+test = { cmd = "pytest src/tests -v", help = "Run all unit tests" }
+lint = { cmd = "ruff check src/rational_functions --fix", help = "Lint the project" }
+format = { cmd = "black src", help = "Format the code" }
+build_docs = { cmd = "mkdocs build", help = "Build the documentation" }
