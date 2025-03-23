@@ -1,6 +1,6 @@
 import numpy as np
 import pytest
-from rational_functions.types import PolynomialRoot
+from rational_functions.rtypes import PolynomialRoot
 from rational_functions.terms import (
     RationalTermSingle,
     RationalTermComplexPair,

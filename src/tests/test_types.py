@@ -1,5 +1,5 @@
 import pytest
-from rational_functions.types import PolynomialRoot
+from rational_functions.rtypes import PolynomialRoot
 from dataclasses import FrozenInstanceError
 
 

@@ -1,9 +1,11 @@
+"""Individual terms in a proper rational function."""
+
 from abc import ABC, abstractmethod
 from typing import Union
 import numpy as np
 from numpy.typing import ArrayLike
 from numpy.polynomial import Polynomial
-from .types import PolynomialRoot
+from .rtypes import PolynomialRoot
 
 RationalIntegralGeneralTerm = Union["RationalIntegralTermBase", "RationalTermBase"]
 
