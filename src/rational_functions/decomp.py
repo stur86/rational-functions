@@ -3,6 +3,10 @@
 import numpy as np
 from numpy.polynomial import Polynomial
 from .rtypes import PolynomialRoot
+import typing
+
+if typing.TYPE_CHECKING:
+    from rational_functions.terms import RationalTerm
 
 
 def catalogue_roots(
@@ -95,3 +99,69 @@ def catalogue_roots(
     root_objs += [PolynomialRoot(r, m, True) for r, m in root_pairs_mults]
 
     return root_objs
+
+
+def partial_frac_decomposition(
+    numerator: Polynomial, denominator_roots: list[PolynomialRoot]
+) -> list["RationalTerm"]:
+    """Perform a partial fraction decomposition of a rational function.
+
+    Args:
+        numerator (Polynomial): Numerator of the rational function.
+        denominator_roots (list[PolynomialRoot]): Roots of the denominator polynomial.
+
+    Returns:
+        list[tuple[PolynomialRoot, ArrayLike]]: List of partial fraction terms as root corresponding to the term
+            (such that its monic polynomial is the denominator of the term) and coefficients of its numerator.
+    """
+
+    # Imported inside to avoid a circular import
+    from rational_functions.terms import RationalTerm
+
+    # Total degree of the denominator
+    deg = sum([r.multiplicity * (1 + r.is_complex_pair) for r in denominator_roots])
+
+    # We construct a linear system
+    M = np.zeros((deg, deg))
+    m_i = 0
+
+    for i, r in enumerate(denominator_roots):
+
+        # Build the polynomial of all other roots
+        residual_p = Polynomial([1.0])
+        for j, r2 in enumerate(denominator_roots):
+            if i == j:
+                continue
+            residual_p *= r2.monic_polynomial()
+
+        for k in range(1, r.multiplicity + 1):
+            residual_root_p = r.with_multiplicity(r.multiplicity - k).monic_polynomial()
+            c = (residual_p * residual_root_p).coef
+            # Column corresponding to constant term
+            M[: len(c), m_i] = c
+            m_i += 1
+            if r.is_complex_pair:
+                # Column corresponding to linear term (only for complex pairs)
+                M[1 : len(c) + 1, m_i] = c
+                m_i += 1
+
+    y = np.zeros(deg)
+    y[: len(numerator.coef)] = numerator.coef
+
+    # Solving gives us the corresponding coefficients of the partial fractions
+    x = np.linalg.solve(M, y)
+
+    m_i = 0
+    terms: list[RationalTerm] = []
+    # We collect the coefficients and build the terms
+    for r in denominator_roots:
+        for i in range(r.multiplicity):
+            if r.is_complex_pair:
+                coef = x[m_i : m_i + 2]
+                m_i += 2
+            else:
+                coef = x[m_i : m_i + 1]
+                m_i += 1
+            terms.append(RationalTerm(r.with_multiplicity(i + 1), coef))
+
+    return terms
