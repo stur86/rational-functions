@@ -125,7 +125,7 @@ class RationalTermSingle(RationalTermBase):
         den = Polynomial([-self._root.value, 1.0])
         mul_str = ""
         if self._root.multiplicity > 1:
-            mul_str = f"^{self._root.multiplicity}"
+            mul_str = str(self._root.multiplicity).translate(Polynomial._superscript_mapping)
 
         return f"{num} / ({den}){mul_str}"
 
@@ -248,9 +248,9 @@ class RationalTermComplexPair(RationalTermBase):
         den = Polynomial([-self._root.real, 1.0])**2 + self._root.imag**2
         mul_str = ""
         if self._root.multiplicity > 1:
-            mul_str = f"^{self._root.multiplicity}"
+            mul_str = str(self._root.multiplicity).translate(Polynomial._superscript_mapping)
 
-        return f"{num} / ({den}){mul_str}"
+        return f"({num}) / ({den}){mul_str}"
 
 
 class RationalTerm(RationalTermBase):

@@ -10,7 +10,6 @@ from rational_functions.terms import (
     RationalIntegralLogPairTerm,
 )
 
-
 def test_arctan_term():
     a = 2.0
     r_r = 3.0
@@ -119,3 +118,28 @@ def test_rational_term_eval(root: PolynomialRoot, a: float):
     pint = np.sum([term(x) for term in pterm_int], axis=0)
 
     assert np.allclose(pint - pint[0], int_y - int_y[0], rtol=1e-3, atol=1e-3)
+
+
+@pytest.mark.parametrize(
+    "rterm",
+    [
+        RationalTermSingle(PolynomialRoot(value=3.0), [1.0]),
+        RationalTermSingle(PolynomialRoot(value=3.0, multiplicity=2), [-1.0]),
+        RationalTermSingle(PolynomialRoot(value=3.0 + 1.0j), [1.0]),
+        RationalTermSingle(PolynomialRoot(value=3.0 + 1.0j, multiplicity=2), [-1.0]),
+        RationalTermComplexPair(
+            PolynomialRoot(value=3.0 - 1.0j, multiplicity=1, is_complex_pair=True), [1.0]
+        ),
+        RationalTermComplexPair(
+            PolynomialRoot(value=3.0 - 1.0j, multiplicity=2, is_complex_pair=True), [-1.0]
+        ),
+    ],
+)
+def test_rational_term_repr(rterm: RationalTerm, snapshot) -> None:
+    """Test the __repr__ method of the RationalTerm class."""
+    assert isinstance(rterm.__repr__(), str)
+    assert isinstance(rterm.__str__(), str)
+    
+    snapshot.assert_match(rterm.__repr__(), "rterm_repr")
+    
+    print(rterm)
