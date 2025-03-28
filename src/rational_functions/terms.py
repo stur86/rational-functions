@@ -6,7 +6,6 @@ import numpy as np
 from numpy.typing import ArrayLike
 from numpy.polynomial import Polynomial
 from .rtypes import PolynomialRoot
-from .decomp import partial_frac_decomposition
 
 RationalIntegralGeneralTerm = Union["RationalIntegralTermBase", "RationalTermBase"]
 
@@ -119,6 +118,16 @@ class RationalTermSingle(RationalTermBase):
             r_i = r.with_multiplicity(r.multiplicity - 1)
             a = -self._coefs[0] / r_i.multiplicity
             return (RationalTermSingle(r_i, [a]),)
+        
+    def __repr__(self) -> str:
+        """Print the term."""
+        num = Polynomial(self._coefs)
+        den = Polynomial([-self._root.value, 1.0])
+        mul_str = ""
+        if self._root.multiplicity > 1:
+            mul_str = f"^{self._root.multiplicity}"
+
+        return f"{num} / ({den}){mul_str}"
 
 
 class RationalTermComplexPair(RationalTermBase):
@@ -233,6 +242,15 @@ class RationalTermComplexPair(RationalTermBase):
                 a *= (2 * k - 1) / (2 * m**2 * k)
 
         return tuple(int_terms)
+
+    def __repr__(self):
+        num = Polynomial(self._coefs)
+        den = Polynomial([-self._root.real, 1.0])**2 + self._root.imag**2
+        mul_str = ""
+        if self._root.multiplicity > 1:
+            mul_str = f"^{self._root.multiplicity}"
+
+        return f"{num} / ({den}){mul_str}"
 
 
 class RationalTerm(RationalTermBase):
