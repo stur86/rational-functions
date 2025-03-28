@@ -58,3 +58,15 @@ class PolynomialRoot:
             multiplicity=multiplicity,
             is_complex_pair=self.is_complex_pair,
         )
+    
+    def is_equivalent(self, root: "PolynomialRoot") -> bool:
+        """Check if two roots are equivalent, multiplicity aside."""
+        
+        if self.is_complex_pair != root.is_complex_pair:
+            return False
+        
+        if self.is_complex_pair:
+            return (self.value == root.value) or (self.value == root.value.conjugate())
+        else:
+            return self.value == root.value
+    

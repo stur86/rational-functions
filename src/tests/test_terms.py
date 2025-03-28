@@ -2,6 +2,7 @@ import numpy as np
 import pytest
 from rational_functions.rtypes import PolynomialRoot
 from rational_functions.terms import (
+    RationalTermBase,
     RationalTermSingle,
     RationalTermComplexPair,
     RationalTerm,
@@ -135,11 +136,47 @@ def test_rational_term_eval(root: PolynomialRoot, a: float):
         ),
     ],
 )
-def test_rational_term_repr(rterm: RationalTerm, snapshot) -> None:
-    """Test the __repr__ method of the RationalTerm class."""
-    assert isinstance(rterm.__repr__(), str)
+def test_rational_term_str(rterm: RationalTerm, snapshot) -> None:
+    """Test the __str__ method of the RationalTerm class."""
     assert isinstance(rterm.__str__(), str)
     
-    snapshot.assert_match(rterm.__repr__(), "rterm_repr")
+    snapshot.assert_match(rterm.__str__(), "rterm_str")
+
+@pytest.mark.parametrize(
+    "rterm1,rterm2",
+    [
+        (
+            RationalTermSingle(PolynomialRoot(value=3.0), [1.0]),
+            RationalTermSingle(PolynomialRoot(value=4.0), [-1.0]),
+        ),
+        (
+            RationalTermSingle(PolynomialRoot(value=3.0), [1.0]),
+            RationalTermComplexPair(PolynomialRoot(value=2.0+1.0j, is_complex_pair=True), [-1.0, 0.5]),
+        ),
+        (
+            RationalTermSingle(PolynomialRoot(value=3.0), [1.0]),
+            RationalTermSingle(PolynomialRoot(value=3.0, multiplicity=2), [-1.0]),
+        ),
+        (
+            RationalTermComplexPair(PolynomialRoot(value=3.0 - 1.0j, multiplicity=1, is_complex_pair=True), [1.0]),
+            RationalTermComplexPair(PolynomialRoot(value=3.0 + 1.0j, multiplicity=2, is_complex_pair=True), [-1.0]),
+        ),
+        (
+            RationalTermComplexPair(PolynomialRoot(value=3.0 - 1.0j, multiplicity=1, is_complex_pair=True), [1.0, 0.5]),
+            RationalTermComplexPair(PolynomialRoot(value=2.0 + 4.0j, multiplicity=1, is_complex_pair=True), [-1.0, 2.0]),
+        )
+    ]
+)
+def test_rational_term_product(rterm1: RationalTerm, rterm2: RationalTerm) -> None:
     
-    print(rterm)
+    rtermprod = RationalTerm.product(rterm1, rterm2)    
+    
+    for term in rtermprod:
+        assert isinstance(term, RationalTermBase)
+
+    x = np.linspace(-1, 1, 50)
+    
+    y1 = rterm1(x) * rterm2(x)
+    y2 = np.sum([term(x) for term in rtermprod], axis=0)
+    assert np.allclose(y1, y2)
+    

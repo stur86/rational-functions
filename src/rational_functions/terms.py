@@ -6,6 +6,7 @@ import numpy as np
 from numpy.typing import ArrayLike
 from numpy.polynomial import Polynomial
 from .rtypes import PolynomialRoot
+from .decomp import partial_frac_decomposition
 
 RationalIntegralGeneralTerm = Union["RationalIntegralTermBase", "RationalTermBase"]
 
@@ -51,6 +52,30 @@ class RationalTermBase(ABC):
     def denominator(self) -> Polynomial:
         """Return the denominator of the term."""
         return self._root.monic_polynomial()
+    
+    @classmethod
+    def product(cls, term1: "RationalTermBase", term2: "RationalTermBase") -> list["RationalTermBase"]:
+        """Compute and decompose the product of two rational terms.
+        
+        Args:
+            term1 (RationalTermBase): First term
+            term2 (RationalTermBase): Second term
+        Returns:
+            list[RationalTermBase]: List of terms in the product
+        """
+        
+        num1 = Polynomial(term1._coefs)
+        num2 = Polynomial(term2._coefs)
+        
+        r1 = term1._root
+        r2 = term2._root
+        
+        if r1.is_equivalent(r2):
+            roots = [r1.with_multiplicity(r1.multiplicity + r2.multiplicity)]
+        else:
+            roots = [r1, r2]
+
+        return partial_frac_decomposition(num1 * num2, roots)
 
 
 class RationalTermSingle(RationalTermBase):
@@ -119,7 +144,7 @@ class RationalTermSingle(RationalTermBase):
             a = -self._coefs[0] / r_i.multiplicity
             return (RationalTermSingle(r_i, [a]),)
         
-    def __repr__(self) -> str:
+    def __str__(self) -> str:
         """Print the term."""
         num = Polynomial(self._coefs)
         den = Polynomial([-self._root.value, 1.0])
@@ -243,7 +268,7 @@ class RationalTermComplexPair(RationalTermBase):
 
         return tuple(int_terms)
 
-    def __repr__(self):
+    def __str__(self):
         num = Polynomial(self._coefs)
         den = Polynomial([-self._root.real, 1.0])**2 + self._root.imag**2
         mul_str = ""
