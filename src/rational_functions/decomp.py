@@ -122,7 +122,7 @@ def partial_frac_decomposition(
     deg = sum([r.multiplicity * (1 + r.is_complex_pair) for r in denominator_roots])
 
     # We construct a linear system
-    M = np.zeros((deg, deg))
+    M = np.zeros((deg, deg), dtype=np.complex128)
     m_i = 0
 
     for i, r in enumerate(denominator_roots):
@@ -146,7 +146,7 @@ def partial_frac_decomposition(
                 m_i += 1
 
     y = np.zeros(deg)
-    y[: len(numerator.coef)] = numerator.coef
+    y[:len(numerator.coef)] = numerator.coef
 
     # Solving gives us the corresponding coefficients of the partial fractions
     x = np.linalg.solve(M, y)
