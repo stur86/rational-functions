@@ -69,4 +69,22 @@ class PolynomialRoot:
             return (self.value == root.value) or (self.value == root.value.conjugate())
         else:
             return self.value == root.value
+        
+    def highest(self, root: "PolynomialRoot") -> "PolynomialRoot":
+        """Return the root with the highest multiplicity between
+        two equivalent roots.
+
+        Args:
+            root (PolynomialRoot): Other root to compare with.
+
+        Returns:
+            PolynomialRoot: Root with the highest multiplicity.
+
+        Raises:
+            AssertionError: If the roots are not equivalent.
+        """
+        
+        assert self.is_equivalent(root), "Roots are not equivalent."
+        
+        return self if self.multiplicity >= root.multiplicity else root
     

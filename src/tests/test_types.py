@@ -46,3 +46,27 @@ def test_polynomial_root(v: complex, m: int, is_pair: bool, valid: bool):
     # Try changing a field
     with pytest.raises(FrozenInstanceError):
         p_root.multiplicity = 4
+
+def test_polyroot_equivalence():
+    p_root_1 = PolynomialRoot(value=3.0, multiplicity=2)
+    p_root_2 = PolynomialRoot(value=3.0, multiplicity=3)
+    p_root_3 = PolynomialRoot(value=3.0 + 1.0j, multiplicity=2)
+    p_root_4 = PolynomialRoot(value=3.0 - 1.0j, multiplicity=2, is_complex_pair=True)
+    p_root_5 = PolynomialRoot(value=3.0 + 1.0j, multiplicity=1, is_complex_pair=True)
+
+    # Test equivalence
+    assert p_root_1.is_equivalent(p_root_2)
+    assert not p_root_1.is_equivalent(p_root_3)
+    assert p_root_4.is_equivalent(p_root_5)
+    assert not p_root_3.is_equivalent(p_root_5)
+    assert not p_root_3.is_equivalent(p_root_4)
+    
+    # Try highest
+    assert p_root_1.highest(p_root_2) == p_root_2
+    assert p_root_2.highest(p_root_1) == p_root_2
+    assert p_root_4.highest(p_root_5) == p_root_4
+    assert p_root_5.highest(p_root_4) == p_root_4
+    
+    with pytest.raises(AssertionError):
+        p_root_1.highest(p_root_3)
+    

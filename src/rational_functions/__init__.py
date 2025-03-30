@@ -1,2 +1,5 @@
-def main() -> None:
-    print("Hello from rational-functions!")
+"""Rational Functions Module"""
+
+from .ratfunc import RationalFunction
+
+__all__ = ["RationalFunction"]
