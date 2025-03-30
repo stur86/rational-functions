@@ -8,7 +8,7 @@ from numpy.polynomial import Polynomial
 from numpy.polynomial.polyutils import _add as np_poly_add
 from rational_functions.terms import RationalTerm
 from rational_functions.decomp import catalogue_roots, partial_frac_decomposition
-from rational_functions.rtypes import PolynomialRoot
+from rational_functions.roots import PolynomialRoot
 
 _RFuncOpCompatibleType = Union["RationalFunction", Polynomial, np.number]
 

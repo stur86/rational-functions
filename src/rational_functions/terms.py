@@ -5,7 +5,7 @@ from typing import Union
 import numpy as np
 from numpy.typing import ArrayLike
 from numpy.polynomial import Polynomial
-from .rtypes import PolynomialRoot
+from .roots import PolynomialRoot
 from .decomp import partial_frac_decomposition
 
 RationalIntegralGeneralTerm = Union["RationalIntegralTermBase", "RationalTermBase"]

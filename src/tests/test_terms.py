@@ -1,7 +1,7 @@
 import numpy as np
 from numpy.polynomial import Polynomial
 import pytest
-from rational_functions.rtypes import PolynomialRoot
+from rational_functions.roots import PolynomialRoot
 from rational_functions.terms import (
     RationalTermBase,
     RationalTermSingle,

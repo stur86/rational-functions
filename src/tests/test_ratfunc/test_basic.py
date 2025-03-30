@@ -3,7 +3,7 @@ import pytest
 from numpy.polynomial import Polynomial
 from rational_functions import RationalFunction
 from rational_functions.terms import RationalTerm
-from rational_functions.rtypes import PolynomialRoot
+from rational_functions.roots import PolynomialRoot
 
 
 @pytest.mark.parametrize(
