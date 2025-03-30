@@ -20,7 +20,7 @@ class RationalTermBase(ABC):
     def __init__(self, root: PolynomialRoot, coefs: ArrayLike):
         self._root = root
         self._coefs = np.asarray(coefs)
-
+        
     @abstractmethod
     def __call__(self, x: ArrayLike) -> ArrayLike:
         """Evaluate the term at the given x values.
@@ -42,11 +42,20 @@ class RationalTermBase(ABC):
     def integ(self) -> tuple[RationalIntegralGeneralTerm, ...]:
         """Return the integral of the term."""
         ...
+        
+    def __neg__(self) -> "RationalTermBase":
+        """Negate the term."""
+        return self.__class__(self._root, -self._coefs)
+
+    @property
+    def root(self) -> PolynomialRoot:
+        """Return the root of the term."""
+        return self._root
 
     @property
     def numerator(self) -> Polynomial:
         """Return the numerator of the term."""
-        return Polynomial(np.trim_zeros(self._coefs, trim="b"))
+        return Polynomial(self._coefs).trim()
 
     @property
     def denominator(self) -> Polynomial:

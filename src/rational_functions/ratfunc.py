@@ -1,9 +1,23 @@
 import numpy as np
+import sys
+from types import FrameType
+from typing import Union
 from numpy.typing import ArrayLike
 from numpy.polynomial import Polynomial
+from numpy.polynomial.polyutils import _add as np_poly_add
 from rational_functions.terms import RationalTerm
 from rational_functions.decomp import catalogue_roots, partial_frac_decomposition
+from rational_functions.rtypes import PolynomialRoot
 
+_RFuncOpCompatibleType = Union["RationalFunction", Polynomial, np.number]
+
+def _get_callercode_safe(depth: int) -> FrameType | None:
+    try:
+        return sys._getframe(depth).f_code
+    except ValueError:
+        # If the stack frame is not available, return None
+        return None
+    
 
 class RationalFunction:
     """Rational function represented by
@@ -22,9 +36,161 @@ class RationalFunction:
             poly (Polynomial, optional): Residual polynomial. Defaults to None.
         """
 
-        self._terms = terms
+        self._terms = list(terms)
         self._poly = poly if poly is not None else Polynomial([0.0])
-        self._poly = self._poly.convert().trim()
+        self._poly = self._poly.trim()
+        
+    @property
+    def poles(self) -> list[PolynomialRoot]:
+        """Get the poles of the rational function.
+
+        Returns:
+            list[PolynomialRoot]: List of poles.
+        """
+        
+        pole_dict: dict[tuple, PolynomialRoot] = {}
+        
+        for term in self._terms:
+            r = term.root
+            key = (r.value, r.is_complex_pair)
+            if key in pole_dict:
+                pole_dict[key] = pole_dict[key].highest(r)
+            else:
+                pole_dict[key] = r
+                
+        return list(pole_dict.values())
+    
+    @property
+    def numerator(self) -> Polynomial:
+        """Get the numerator polynomial of the rational function.
+
+        Returns:
+            Polynomial: Numerator polynomial.
+        """
+        den = self.denominator
+        num = self._poly*den
+        for term in self._terms:
+            num += Polynomial(term._coefs)*(den // term.root.monic_polynomial())
+
+        return num
+        
+    @property
+    def denominator(self) -> Polynomial:
+        """Get the denominator polynomial of the rational function.
+
+        Returns:
+            Polynomial: Denominator polynomial.
+        """
+        poles = self.poles
+        monics = [r.monic_polynomial() for r in poles]
+        den_poly = Polynomial([1.0])
+        for m in monics:
+            den_poly *= m
+        return den_poly        
+
+    def __neg__(self) -> "RationalFunction":
+        """Negate the rational function.
+
+        Returns:
+            RationalFunction: Negated rational function.
+        """
+        neg_terms = [term.__neg__() for term in self._terms]
+        return RationalFunction(neg_terms, -self._poly)
+
+    def __add__(self, other: _RFuncOpCompatibleType) -> "RationalFunction":
+        """Add two rational functions.
+
+        Args:
+            other (RationalFunction): Other rational function to add.
+
+        Returns:
+            RationalFunction: Resulting rational function.
+        """
+        sum_terms = list(self._terms)
+        other_terms = []
+        other_poly: Polynomial
+        
+        is_other_ratfunc = isinstance(other, RationalFunction)
+
+        if not is_other_ratfunc:
+            # This check is necessary to avoid additions Polynomial+RationalFunction
+            # being delegated to the Polynomial.__add__ method,
+            # which returns a Polynomial object with RationalFunction coefficients.
+            for i in range(1, 4):
+                if _get_callercode_safe(i) == np_poly_add.__code__:                
+                    # This means it's being called from inside a Polynomial.__add__ method
+                    # which is not what we want
+                    raise ValueError("Can not add a polynomial to a rational function.")
+
+        if is_other_ratfunc:
+            other_terms = list(other._terms)
+            other_poly = other._poly
+        elif isinstance(other, Polynomial):
+            other_poly = other
+        elif np.isscalar(other):
+            # If other is a scalar, convert it to a polynomial
+            other_poly = Polynomial([other])
+        else:
+            raise TypeError("Unsupported type for addition: {}".format(type(other)))
+
+        for term in other_terms:
+            was_added = False
+            for i, existing_term in enumerate(sum_terms):
+                if existing_term.root == term.root:
+                    coefs = sum_terms[i]._coefs + term._coefs
+                    sum_terms[i] = RationalTerm(term.root, coefs)
+                    was_added = True
+                    break
+            if not was_added:
+                sum_terms.append(term)
+
+        ans = RationalFunction(
+            sum_terms,
+            self._poly + other_poly,
+        )
+
+        return ans
+
+    def __radd__(
+        self,
+        other: _RFuncOpCompatibleType,
+    ) -> "RationalFunction":
+        """Right add operator for RationalFunction.
+
+        Args:
+            other (RationalFunction): Other rational function to add.
+
+        Returns:
+            RationalFunction: Resulting rational function.
+        """
+        return self + other
+    
+    def __sub__(
+        self, other: _RFuncOpCompatibleType
+    ) -> "RationalFunction":
+        """Subtract two rational functions.
+
+        Args:
+            other (RationalFunction): Other rational function to subtract.
+
+        Returns:
+            RationalFunction: Resulting rational function.
+        """
+        return self + (-other)
+    
+    def __rsub__(
+        self, other: _RFuncOpCompatibleType
+    ) -> "RationalFunction":
+        """Right subtract operator for RationalFunction.
+
+        Args:
+            other (RationalFunction): Other rational function to subtract.
+
+        Returns:
+            RationalFunction: Resulting rational function.
+        """
+        
+        return (- self) + other
 
     def __call__(self, x: ArrayLike) -> ArrayLike:
         """Evaluate the rational function at given points.
@@ -45,9 +211,9 @@ class RationalFunction:
         cls,
         numerator: Polynomial,
         denominator: Polynomial,
-        atol: float = 1e-8,
-        rtol: float = 1e-5,
-        imtol: float = 1e-13,
+        atol: float = 0.0,
+        rtol: float = 0.0,
+        imtol: float = 0.0,
     ) -> "RationalFunction":
         """Construct a RationalFunction from a fraction of two
         polynomials.
@@ -62,10 +228,10 @@ class RationalFunction:
         Args:
             numerator (Polynomial): Numerator polynomial.
             denominator (Polynomial): Denominator polynomial.
-            atol (float, optional): Absolute tolerance for root equivalence. Defaults to 1e-8.
-            rtol (float, optional): Relative tolerance for root equivalence. Defaults to 1e-5.
+            atol (float, optional): Absolute tolerance for root equivalence. Defaults to 0.
+            rtol (float, optional): Relative tolerance for root equivalence. Defaults to 0.
             imtol (float, optional): Tolerance for imaginary part of roots to be considered
-                zero. Defaults to 1e-13.
+                zero. Defaults to 0.
 
         Returns:
             RationalFunction: Rational function object.

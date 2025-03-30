@@ -1,0 +1,136 @@
+import pytest
+import numpy as np
+from typing import TypeVar
+from itertools import chain, product
+from numpy.polynomial import Polynomial
+from rational_functions import RationalFunction
+from rational_functions.terms import RationalTerm, PolynomialRoot
+
+
+T = TypeVar("T")
+
+def self_product_w_o_duplicates(a: list[T]) -> list[tuple[T, T]]:
+    """Return all unique pairs of elements from a list.
+    Args:
+        a (list[T]): Input list.
+    Returns:
+        list[tuple[T, T]]: List of unique pairs.
+    """
+    prod = []
+    
+    for i, a1 in enumerate(a):
+        for a2 in a[i+1:]:
+            prod.append((a1, a2))
+            
+    return prod
+
+_test_terms = {
+    "r_s": RationalTerm(PolynomialRoot(3.0, 1), [1.0]),  # Single real root
+    "r_m": RationalTerm(
+        PolynomialRoot(3.0, 2), [1.0]
+    ),  # Single real root with multiplicity
+    "c_s": RationalTerm(PolynomialRoot(3.0 + 1.0j, 1), [1.0]),  # Single complex root
+    "c_m": RationalTerm(
+        PolynomialRoot(3.0 + 1.0j, 2), [1.0]
+    ),  # Single complex root with multiplicity
+    "p_s": RationalTerm(
+        PolynomialRoot(3.0 - 1.0j, 1, True), [1.0]
+    ),  # Single complex conjugate pair root
+    "p_m": RationalTerm(
+        PolynomialRoot(3.0 - 1.0j, 2, True), [1.0]
+    ),  # Single complex conjugate pair root with multiplicity
+}
+
+_test_ratfuncs = chain(
+    *[
+        [
+            RationalFunction([term], None),
+            RationalFunction([term], Polynomial([2.0])),
+            RationalFunction([term], Polynomial([2.0, 3.0])),
+        ]
+        for term in _test_terms.values()
+    ]
+)
+
+# Plus a series of rational functions with term pairs
+_test_ratfuncs = chain(
+    _test_ratfuncs,
+    *[
+        [
+            RationalFunction([term1, term2], None),
+            RationalFunction([term1, term2], Polynomial([2.0])),
+            RationalFunction([term1, term2], Polynomial([2.0, 3.0])),
+        ]
+        for term1, term2 in self_product_w_o_duplicates(list(_test_terms.values()))
+    ],
+)
+_test_ratfuncs = list(_test_ratfuncs)
+
+_test_ratfunc_pairs = self_product_w_o_duplicates(_test_ratfuncs)
+
+@pytest.mark.parametrize(
+    "rf",
+    _test_ratfuncs,
+)
+def test_rfunc_neg(rf: RationalFunction) -> None:
+    """Test negation of a rational function."""
+    x = np.linspace(-1, 1, 50)
+    y1 = rf(x) * (-1)
+    y2 = (-rf)(x)
+
+    assert np.allclose(y1, y2)
+    assert isinstance((-rf), rf.__class__)
+
+@pytest.mark.parametrize(
+    "rf_l, rf_r",
+    _test_ratfunc_pairs
+)
+def test_rfunc_add(rf_l: RationalFunction, rf_r: RationalFunction) -> None:
+    """Test addition of two rational functions."""
+    x = np.linspace(-1, 1, 50)
+    
+    rf_s = (rf_l + rf_r)
+
+    assert isinstance(rf_s, rf_l.__class__)
+
+    y1 = rf_l(x) + rf_r(x)
+    y2 = (rf_l+rf_r)(x)
+    
+    assert np.allclose(y1, y2)
+    
+
+@pytest.mark.parametrize(
+    "rf,p",
+    product(_test_ratfuncs, [Polynomial([1.0]), Polynomial([2.0, 3.0]), Polynomial([3.0, 4.0, 5.0])]),
+)
+def test_rfunc_poly_add(rf: RationalFunction, p: Polynomial) -> None:
+    
+    """Test addition of a rational function and a polynomial."""
+    x = np.linspace(-1, 1, 50)
+    
+    s1 = rf+p
+    s2 = p+rf
+    
+    assert isinstance(s1, rf.__class__)
+    assert isinstance(s2, rf.__class__)
+
+    y1 = rf(x) + p(x)
+    y2 = s1(x)
+    y3 = s2(x)
+    
+    assert np.allclose(y1, y2)
+    assert np.allclose(y1, y3)
+    assert np.allclose(y2, y3)
+
+@pytest.mark.parametrize(
+    "rf_l, rf_r",
+    _test_ratfunc_pairs
+)
+def test_rfuc_sub(rf_l: RationalFunction, rf_r: RationalFunction) -> None:
+    """Test subtraction of two rational functions."""
+    x = np.linspace(-1, 1, 50)
+    y1 = rf_l(x) - rf_r(x)
+    y2 = (rf_l - rf_r)(x)
+
+    assert np.allclose(y1, y2)
+    assert isinstance((rf_l - rf_r), rf_l.__class__)

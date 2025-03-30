@@ -11,6 +11,7 @@ from rational_functions.terms import (
     RationalIntegralLogTerm,
     RationalIntegralLogPairTerm,
 )
+from pytest_snapshot.plugin import Snapshot
 
 def test_arctan_term():
     a = 2.0
@@ -137,7 +138,7 @@ def test_rational_term_eval(root: PolynomialRoot, a: float):
         ),
     ],
 )
-def test_rational_term_str(rterm: RationalTerm, snapshot) -> None:
+def test_rational_term_str(rterm: RationalTerm, snapshot: Snapshot) -> None:
     """Test the __str__ method of the RationalTerm class."""
     assert isinstance(rterm.__str__(), str)
     
@@ -206,3 +207,15 @@ def test_rational_term_polynomial_product(rterm: RationalTerm, poly: Polynomial)
     y1 = rterm(x) * poly(x)
     y2 = np.sum([term(x) for term in out_terms], axis=0) + out_poly(x)
     assert np.allclose(y1, y2)
+
+def test_rational_term_neg() -> None:
+    
+    rterm = RationalTerm(PolynomialRoot(value=3.0+1.0j, is_complex_pair=True), [1.0, 2.0])
+    
+    x = np.linspace(-1, 1, 50)
+    y1 = rterm(x)*(-1)
+    y2 = (-rterm)(x)
+    
+    assert np.allclose(y1, y2)
+    assert isinstance((-rterm), rterm.__class__)
+    assert ((-rterm).root == rterm.root)
