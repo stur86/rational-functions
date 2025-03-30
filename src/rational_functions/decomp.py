@@ -145,7 +145,8 @@ def partial_frac_decomposition(
                 M[1 : len(c) + 1, m_i] = c
                 m_i += 1
 
-    y = np.zeros(deg)
+    y = np.zeros(deg, dtype=np.complex128)
+    # We build the right-hand side of the system
     y[:len(numerator.coef)] = numerator.coef
 
     # Solving gives us the corresponding coefficients of the partial fractions

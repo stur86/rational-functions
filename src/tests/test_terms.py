@@ -1,4 +1,5 @@
 import numpy as np
+from numpy.polynomial import Polynomial
 import pytest
 from rational_functions.rtypes import PolynomialRoot
 from rational_functions.terms import (
@@ -180,3 +181,28 @@ def test_rational_term_product(rterm1: RationalTerm, rterm2: RationalTerm) -> No
     y2 = np.sum([term(x) for term in rtermprod], axis=0)
     assert np.allclose(y1, y2)
     
+
+@pytest.mark.parametrize(
+    "rterm,poly",
+    [
+        (RationalTermSingle(PolynomialRoot(value=3.0), [1.0]), Polynomial([1.0, 2.0])),
+        (RationalTermSingle(PolynomialRoot(value=3.0, multiplicity=3), [1.0]), Polynomial([1.0, 2.0, 3.0])),
+        (RationalTermSingle(PolynomialRoot(value=3.0), [1.0]), Polynomial([-1.0])),
+        (RationalTermSingle(PolynomialRoot(value=3.0+1.0j), [1.0]), Polynomial([-1.0, 2.0])),
+        (RationalTermComplexPair(PolynomialRoot(value=3.0 + 1.0j, multiplicity=1, is_complex_pair=True), [1.0]), Polynomial([1.0, 2.0])),
+        (RationalTermComplexPair(PolynomialRoot(value=3.0 - 1.0j, multiplicity=2, is_complex_pair=True), [1.0]), Polynomial([1.0, 2.0])),
+        (RationalTermComplexPair(PolynomialRoot(value=3.0 - 1.0j, multiplicity=1, is_complex_pair=True), [1.0]), Polynomial([1.0])),
+    ]
+)
+def test_rational_term_polynomial_product(rterm: RationalTerm, poly: Polynomial) -> None:
+    """Test the product of a RationalTerm with a Polynomial."""
+    out_terms, out_poly = RationalTerm.product_w_polynomial(rterm, poly)
+
+    for term in out_terms:
+        assert isinstance(term, RationalTermBase)
+
+    x = np.linspace(-1, 1, 50)
+    
+    y1 = rterm(x) * poly(x)
+    y2 = np.sum([term(x) for term in out_terms], axis=0) + out_poly(x)
+    assert np.allclose(y1, y2)

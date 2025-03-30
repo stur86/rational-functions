@@ -55,11 +55,13 @@ class RationalTermBase(ABC):
     
     @classmethod
     def product(cls, term1: "RationalTermBase", term2: "RationalTermBase") -> list["RationalTermBase"]:
-        """Compute and decompose the product of two rational terms.
+        """Compute and decompose the product of two rational terms. This method
+        is not implemented as an overloaded operator __mul__ since the output is
+        not a RationalTerm but a list of RationalTerms.
         
         Args:
             term1 (RationalTermBase): First term
-            term2 (RationalTermBase): Second term
+            term2 (RationalTermBase | Polynomial): Second term
         Returns:
             list[RationalTermBase]: List of terms in the product
         """
@@ -76,7 +78,33 @@ class RationalTermBase(ABC):
             roots = [r1, r2]
 
         return partial_frac_decomposition(num1 * num2, roots)
+    
+    @classmethod
+    def product_w_polynomial(cls, term: "RationalTermBase", poly: Polynomial) -> tuple[list["RationalTermBase"], Polynomial]:
+        """Compute and decompose the product of a rational term and a polynomial.
+        This method is not implemented as an overloaded operator __mul__ since the output is        
+        not a RationalTerm but a list of RationalTerms and a Polynomial.
+        
+        Args:
+            term (RationalTermBase): Rational term
+            poly (Polynomial): Polynomial to multiply with
+            
+        Returns:
+            tuple[list[RationalTermBase], Polynomial]: List of terms in the product and the remaining polynomial
+        """
+        
+        num = poly*Polynomial(term._coefs)
+        r = term._root
+        
+        den = r.monic_polynomial()
+        poly_out = num // den
+        poly_rem = num % den
+        
+        terms = partial_frac_decomposition(poly_rem, [r])
 
+        return terms, poly_out
+        
+        
 
 class RationalTermSingle(RationalTermBase):
     """A single term in a proper rational function,
