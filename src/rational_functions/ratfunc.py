@@ -77,9 +77,13 @@ class RationalFunction:
         poly_rem = numerator % denominator
 
         # Find roots
-        den_roots = catalogue_roots(denominator)
+        if denominator.degree() == 0:
+            # No roots, return polynomial part
+            return cls([], poly_quot)
+        den_roots = catalogue_roots(denominator, atol=atol, rtol=rtol, imtol=imtol)
         rterms = partial_frac_decomposition(
-            poly_rem, den_roots, atol=atol, rtol=rtol, imtol=imtol
+            poly_rem,
+            den_roots,
         )
 
         return cls(rterms, poly_quot)

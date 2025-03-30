@@ -18,6 +18,9 @@ build-backend = "hatchling.build"
 [dependency-groups]
 dev = [
     "black>=25.1.0",
+    "ipykernel>=6.29.5",
+    "jupytext>=1.16.7",
+    "matplotlib>=3.10.1",
     "mkdocs-api-autonav>=0.2.1",
     "mkdocs-material>=9.6.9",
     "mkdocstrings>=0.29.0",
@@ -31,5 +34,5 @@ dev = [
 test = { cmd = "pytest src/tests -v", help = "Run all unit tests" }
 lint = { cmd = "ruff check src/rational_functions --fix", help = "Lint the project" }
 format = { cmd = "black src", help = "Format the code" }
-build_docs = { cmd = "mkdocs build", help = "Build the documentation" }
+build-docs = { cmd = "mkdocs build", help = "Build the documentation" }
 regen-snapshots = { cmd = "pytest --snapshot-update", help = "Regenerate all snapshots for tests that need them" }
