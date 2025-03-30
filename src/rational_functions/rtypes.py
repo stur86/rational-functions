@@ -88,3 +88,11 @@ class PolynomialRoot:
         
         return self if self.multiplicity >= root.multiplicity else root
     
+    def __hash__(self) -> int:
+        """Return a hash of the root."""
+        vr = self.value.real
+        vi = self.value.imag
+        if self.is_complex_pair:
+            vi = abs(vi)
+        return hash((vr, vi, self.multiplicity, self.is_complex_pair))
+        

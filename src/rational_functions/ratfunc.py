@@ -1,5 +1,6 @@
 import numpy as np
 import sys
+from functools import cached_property
 from types import FrameType
 from typing import Union
 from numpy.typing import ArrayLike
@@ -27,7 +28,7 @@ class RationalFunction:
 
     _poly: Polynomial
     _terms: list[RationalTerm]
-
+    
     def __init__(self, terms: list[RationalTerm], poly: Polynomial | None = None):
         """Initialize the rational function.
 
@@ -40,7 +41,7 @@ class RationalFunction:
         self._poly = poly if poly is not None else Polynomial([0.0])
         self._poly = self._poly.trim()
         
-    @property
+    @cached_property
     def poles(self) -> list[PolynomialRoot]:
         """Get the poles of the rational function.
 
@@ -52,7 +53,11 @@ class RationalFunction:
         
         for term in self._terms:
             r = term.root
-            key = (r.value, r.is_complex_pair)
+            rvr = r.value.real
+            rvi = r.value.imag
+            if r.is_complex_pair:
+                rvi = abs(rvi)
+            key = (rvr, rvi, r.is_complex_pair)
             if key in pole_dict:
                 pole_dict[key] = pole_dict[key].highest(r)
             else:
@@ -60,7 +65,7 @@ class RationalFunction:
                 
         return list(pole_dict.values())
     
-    @property
+    @cached_property
     def numerator(self) -> Polynomial:
         """Get the numerator polynomial of the rational function.
 
@@ -74,7 +79,7 @@ class RationalFunction:
 
         return num
         
-    @property
+    @cached_property
     def denominator(self) -> Polynomial:
         """Get the denominator polynomial of the rational function.
 
