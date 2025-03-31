@@ -225,6 +225,9 @@ def test_rational_term_neg() -> None:
     "pterm",
     [
         RationalTermComplexPair(PolynomialRoot(value=3.0+1.0j, is_complex_pair=True), [1.0, 2.0]),
+        RationalTermComplexPair(PolynomialRoot(value=-2.0+1.0j, is_complex_pair=True), [3.0]),
+        RationalTermComplexPair(PolynomialRoot(value=-2.0+1.0j, is_complex_pair=True), [3.0j]),
+        RationalTermComplexPair(PolynomialRoot(value=-2.0+1.0j, is_complex_pair=True), [0.0, 1.0]),
     ]
 )
 def test_rational_term_split(pterm: RationalTermComplexPair) -> None:
