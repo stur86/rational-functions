@@ -219,3 +219,26 @@ def test_rational_term_neg() -> None:
     assert np.allclose(y1, y2)
     assert isinstance((-rterm), rterm.__class__)
     assert ((-rterm).root == rterm.root)
+    
+
+@pytest.mark.parametrize(
+    "pterm",
+    [
+        RationalTermComplexPair(PolynomialRoot(value=3.0+1.0j, is_complex_pair=True), [1.0, 2.0]),
+    ]
+)
+def test_rational_term_split(pterm: RationalTermComplexPair) -> None:
+    """Test the split method of the RationalTermComplexPair class."""
+    rterm1, rterm2 = pterm.split()
+    
+    assert isinstance(rterm1, RationalTermSingle)
+    assert isinstance(rterm2, RationalTermSingle)
+    assert rterm1.root.value == pterm.root.value
+    assert rterm2.root.value == pterm.root.value.conjugate()
+    
+    x = np.linspace(-1, 1, 50)
+    
+    y1 = pterm(x)
+    y2 = rterm1(x) + rterm2(x)
+    
+    assert np.allclose(y1, y2)

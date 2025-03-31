@@ -304,6 +304,22 @@ class RationalTermComplexPair(RationalTermBase):
                 a *= (2 * k - 1) / (2 * m**2 * k)
 
         return tuple(int_terms)
+    
+    def split(self) -> tuple["RationalTermSingle", "RationalTermSingle"]:
+        """Split the term into two terms."""
+        r = self._root
+        k = r.multiplicity
+        
+        r1 = PolynomialRoot(value=r.value, multiplicity=k, is_complex_pair=False)
+        r2 = PolynomialRoot(value=r.value.conjugate(), multiplicity=k, is_complex_pair=False)
+        rv1 = r1.value
+        rv2 = r2.value
+        
+        a, b = self._coefs
+        c1 = (a+b*rv1)/(rv1-rv2)
+        c2 = (a+b*rv2)/(rv2-rv1)
+        
+        return (RationalTermSingle(r1, [c1]), RationalTermSingle(r2, [c2]))
 
     def __str__(self):
         num = Polynomial(self._coefs)
