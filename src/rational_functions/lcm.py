@@ -25,7 +25,10 @@ class RootLCM:
     @staticmethod
     def _poly_from_roots(roots: Mapping[complex, int]) -> Polynomial:
         """Return the polynomial whose roots are the given roots."""
-        return Polynomial.fromroots(list(chain(*[[k] * v for k, v in roots.items()])))
+        roots = list(chain(*[[k] * v for k, v in roots.items()]))
+        if len(roots) == 0:
+            return Polynomial([1.0])
+        return Polynomial.fromroots(roots)
     
     @property
     def roots(self) -> list[PolynomialRoot]:
