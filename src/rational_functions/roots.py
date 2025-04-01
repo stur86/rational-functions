@@ -22,11 +22,6 @@ class PolynomialRoot:
 
     value: complex
     multiplicity: int = 1
-    is_complex_pair: bool = False
-
-    def __post_init__(self):
-        if self.is_complex_pair:
-            assert not self.is_real, "Complex pair roots must be complex."
 
     @property
     def is_real(self) -> bool:
@@ -45,30 +40,19 @@ class PolynomialRoot:
 
     def monic_polynomial(self) -> Polynomial:
         """Return the monic polynomial for the root."""
-        if self.is_complex_pair:
-            p = Polynomial([self.real**2 + self.imag**2, -2 * self.real, 1.0])
-        else:
-            p = Polynomial([-self.value, 1.0])
-        return p**self.multiplicity
+        return Polynomial([-self.value, 1.0])**self.multiplicity
 
     def with_multiplicity(self, multiplicity: int) -> "PolynomialRoot":
         """Return a new PolynomialRoot with a different multiplicity."""
         return PolynomialRoot(
             value=self.value,
             multiplicity=multiplicity,
-            is_complex_pair=self.is_complex_pair,
         )
     
     def is_equivalent(self, root: "PolynomialRoot") -> bool:
         """Check if two roots are equivalent, multiplicity aside."""
         
-        if self.is_complex_pair != root.is_complex_pair:
-            return False
-        
-        if self.is_complex_pair:
-            return (self.value == root.value) or (self.value == root.value.conjugate())
-        else:
-            return self.value == root.value
+        return self.value == root.value
         
     def highest(self, root: "PolynomialRoot") -> "PolynomialRoot":
         """Return the root with the highest multiplicity between
@@ -86,34 +70,12 @@ class PolynomialRoot:
         
         assert self.is_equivalent(root), "Roots are not equivalent."
         
-        return self if self.multiplicity >= root.multiplicity else root
-    
-    def split(self) -> tuple["PolynomialRoot", "PolynomialRoot"]:
-        """For a complex pair root, split it into two single
-        complex conjugate roots.
-        
-        Returns:
-            tuple[PolynomialRoot, PolynomialRoot]: The two single roots
-            
-        Raises:
-            AssertionError: if this is not a complex pair root
-        """
-        
-        assert self.is_complex_pair, "Root is not a complex pair"
-        
-        v1 = self.value
-        v2 = v1.conjugate()
-        
-        return (
-            PolynomialRoot(v1, self.multiplicity, False),
-            PolynomialRoot(v2, self.multiplicity, False)
+        return PolynomialRoot(
+            value=self.value,
+            multiplicity=max(self.multiplicity, root.multiplicity),
         )
     
     def __hash__(self) -> int:
         """Return a hash of the root."""
-        vr = self.value.real
-        vi = self.value.imag
-        if self.is_complex_pair:
-            vi = abs(vi)
-        return hash((vr, vi, self.multiplicity, self.is_complex_pair))
+        return hash((self.value, self.multiplicity))
         
