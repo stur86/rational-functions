@@ -15,9 +15,4 @@ class RootLCM:
                 common multiple
         """
         
-        # First, separate complex pairs from singles
-        single_roots = filter(lambda r: not r.is_complex_pair, roots)
-        pair_roots = filter(lambda r: r.is_complex_pair, roots)
-        single_roots = chain(single_roots, *map(lambda r: r.split(), pair_roots))
-        
-        print(list(single_roots))
+        print(list(roots))

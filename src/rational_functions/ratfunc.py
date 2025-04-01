@@ -142,12 +142,14 @@ class RationalFunction:
             was_added = False
             for i, existing_term in enumerate(sum_terms):
                 if existing_term.root == term.root:
-                    coefs = sum_terms[i]._coefs + term._coefs
-                    sum_terms[i] = RationalTerm(term.root, coefs)
+                    sum_terms[i] = RationalTerm(term.root, existing_term._coef+term._coef)
                     was_added = True
                     break
             if not was_added:
                 sum_terms.append(term)
+        
+        # Remove terms with zero coefficients
+        sum_terms = [term for term in sum_terms if term._coef != 0.0]
 
         ans = RationalFunction(
             sum_terms,
