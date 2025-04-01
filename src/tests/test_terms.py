@@ -3,15 +3,13 @@ from numpy.polynomial import Polynomial
 import pytest
 from rational_functions.roots import PolynomialRoot
 from rational_functions.terms import (
-    RationalTermBase,
-    RationalTermSingle,
-    RationalTermComplexPair,
     RationalTerm,
     RationalIntegralArctanTerm,
     RationalIntegralLogTerm,
     RationalIntegralLogPairTerm,
 )
 from pytest_snapshot.plugin import Snapshot
+
 
 def test_arctan_term():
     a = 2.0
@@ -52,35 +50,17 @@ def test_log_pair_term():
         PolynomialRoot(value=3.0, multiplicity=2),
         PolynomialRoot(value=3.0 + 1.0j, multiplicity=1),
         PolynomialRoot(value=3.0 + 1.0j, multiplicity=2),
-        PolynomialRoot(value=3.0 - 1.0j, multiplicity=1, is_complex_pair=True),
-        PolynomialRoot(value=3.0 - 1.0j, multiplicity=2, is_complex_pair=True),
     ],
 )
-def test_rational_term(root: PolynomialRoot):
-    coefs = [1.0]
-    term = RationalTerm(root, coefs)
+def test_rational_term_num_den(root: PolynomialRoot):
+    term = RationalTerm(root, 1.0)
 
-    if root.is_complex_pair:
-        assert isinstance(term, RationalTermComplexPair)
-        assert len(term._coefs) == 2
-        assert np.all(term._coefs == coefs + [0.0])
-        assert term.numerator == np.polynomial.Polynomial(coefs)
-        assert (
-            term.denominator
-            == np.polynomial.Polynomial(
-                [root.real**2 + root.imag**2, -2 * root.real, 1.0]
-            )
-            ** root.multiplicity
-        )
-    else:
-        assert isinstance(term, RationalTermSingle)
-        assert len(term._coefs) == 1
-        assert np.all(term._coefs == coefs)
-        assert term.numerator == np.polynomial.Polynomial(coefs)
-        assert (
-            term.denominator
-            == np.polynomial.Polynomial([-root.value, 1.0]) ** root.multiplicity
-        )
+    assert term._coef == 1.0
+    assert term.numerator == np.polynomial.Polynomial([1.0])
+    assert (
+        term.denominator
+        == np.polynomial.Polynomial([-root.value, 1.0]) ** root.multiplicity
+    )
 
 
 @pytest.mark.parametrize(
@@ -91,26 +71,22 @@ def test_rational_term(root: PolynomialRoot):
         (PolynomialRoot(value=3.0, multiplicity=3), -1.0),
         (PolynomialRoot(value=3.0 + 1.0j), 1.0),
         (PolynomialRoot(value=3.0 + 1.0j, multiplicity=2), -1.0),
-        (PolynomialRoot(value=3.0 - 1.0j), 1.0),
-        (PolynomialRoot(value=3.0 - 1.0j, multiplicity=3), -1.0),
-        (PolynomialRoot(value=3.0 - 1.0j, multiplicity=1, is_complex_pair=True), 1.0),
-        (PolynomialRoot(value=3.0 - 1.0j, multiplicity=2, is_complex_pair=True), -1.0),
+        (PolynomialRoot(value=3.0 - 1.0j), 1.0+0.5j),
+        (PolynomialRoot(value=3.0 - 1.0j, multiplicity=3), -1.0+0.5j),
     ],
 )
-def test_rational_term_eval(root: PolynomialRoot, a: float):
-    pterm = RationalTerm(root, [a])
+def test_rational_term_eval(root: PolynomialRoot, a: complex):
+    pterm = RationalTerm(root, a)
 
     x = np.linspace(-1, 1, 10000)
-    if root.is_complex_pair:
-        y = a / ((x - root.real) ** 2 + root.imag**2) ** root.multiplicity
-    else:
-        y = a / (x - root.value) ** root.multiplicity
+    y = a / (x - root.value) ** root.multiplicity
 
     assert np.allclose(pterm(x), y)
 
     # Evaluate derivatives
-    assert len(pterm.deriv()) == 1 + root.is_complex_pair
-    pderiv = np.sum([term(x) for term in pterm.deriv()], axis=0)
+    dterm = pterm.deriv()
+    assert isinstance(dterm, RationalTerm)
+    pderiv = dterm(x)
 
     dy_dx = np.gradient(y, x)
 
@@ -126,122 +102,93 @@ def test_rational_term_eval(root: PolynomialRoot, a: float):
 @pytest.mark.parametrize(
     "rterm",
     [
-        RationalTermSingle(PolynomialRoot(value=3.0), [1.0]),
-        RationalTermSingle(PolynomialRoot(value=3.0, multiplicity=2), [-1.0]),
-        RationalTermSingle(PolynomialRoot(value=3.0 + 1.0j), [1.0]),
-        RationalTermSingle(PolynomialRoot(value=3.0 + 1.0j, multiplicity=2), [-1.0]),
-        RationalTermComplexPair(
-            PolynomialRoot(value=3.0 - 1.0j, multiplicity=1, is_complex_pair=True), [1.0]
-        ),
-        RationalTermComplexPair(
-            PolynomialRoot(value=3.0 - 1.0j, multiplicity=2, is_complex_pair=True), [-1.0]
-        ),
+        RationalTerm(PolynomialRoot(value=3.0), [1.0]),
+        RationalTerm(PolynomialRoot(value=3.0, multiplicity=2), [-1.0]),
+        RationalTerm(PolynomialRoot(value=3.0 + 1.0j), [1.0]),
+        RationalTerm(PolynomialRoot(value=3.0 + 1.0j, multiplicity=2), [-1.0]),
     ],
 )
 def test_rational_term_str(rterm: RationalTerm, snapshot: Snapshot) -> None:
     """Test the __str__ method of the RationalTerm class."""
     assert isinstance(rterm.__str__(), str)
-    
+
     snapshot.assert_match(rterm.__str__(), "rterm_str")
+
 
 @pytest.mark.parametrize(
     "rterm1,rterm2",
     [
         (
-            RationalTermSingle(PolynomialRoot(value=3.0), [1.0]),
-            RationalTermSingle(PolynomialRoot(value=4.0), [-1.0]),
+            RationalTerm(PolynomialRoot(value=3.0), [1.0]),
+            RationalTerm(PolynomialRoot(value=4.0), [-1.0]),
         ),
         (
-            RationalTermSingle(PolynomialRoot(value=3.0), [1.0]),
-            RationalTermComplexPair(PolynomialRoot(value=2.0+1.0j, is_complex_pair=True), [-1.0, 0.5]),
+            RationalTerm(PolynomialRoot(value=3.0), [1.0]),
+            RationalTerm(
+                PolynomialRoot(value=2.0 + 1.0j), [-1.0, 0.5]
+            ),
         ),
         (
-            RationalTermSingle(PolynomialRoot(value=3.0), [1.0]),
-            RationalTermSingle(PolynomialRoot(value=3.0, multiplicity=2), [-1.0]),
+            RationalTerm(PolynomialRoot(value=3.0), [1.0]),
+            RationalTerm(PolynomialRoot(value=3.0, multiplicity=2), [-1.0]),
         ),
-        (
-            RationalTermComplexPair(PolynomialRoot(value=3.0 - 1.0j, multiplicity=1, is_complex_pair=True), [1.0]),
-            RationalTermComplexPair(PolynomialRoot(value=3.0 + 1.0j, multiplicity=2, is_complex_pair=True), [-1.0]),
-        ),
-        (
-            RationalTermComplexPair(PolynomialRoot(value=3.0 - 1.0j, multiplicity=1, is_complex_pair=True), [1.0, 0.5]),
-            RationalTermComplexPair(PolynomialRoot(value=2.0 + 4.0j, multiplicity=1, is_complex_pair=True), [-1.0, 2.0]),
-        )
-    ]
+    ],
 )
 def test_rational_term_product(rterm1: RationalTerm, rterm2: RationalTerm) -> None:
-    
-    rtermprod = RationalTerm.product(rterm1, rterm2)    
-    
+
+    rtermprod = RationalTerm.product(rterm1, rterm2)
+
     for term in rtermprod:
-        assert isinstance(term, RationalTermBase)
+        assert isinstance(term, RationalTerm)
 
     x = np.linspace(-1, 1, 50)
-    
+
     y1 = rterm1(x) * rterm2(x)
     y2 = np.sum([term(x) for term in rtermprod], axis=0)
     assert np.allclose(y1, y2)
-    
+
 
 @pytest.mark.parametrize(
     "rterm,poly",
     [
-        (RationalTermSingle(PolynomialRoot(value=3.0), [1.0]), Polynomial([1.0, 2.0])),
-        (RationalTermSingle(PolynomialRoot(value=3.0, multiplicity=3), [1.0]), Polynomial([1.0, 2.0, 3.0])),
-        (RationalTermSingle(PolynomialRoot(value=3.0), [1.0]), Polynomial([-1.0])),
-        (RationalTermSingle(PolynomialRoot(value=3.0+1.0j), [1.0]), Polynomial([-1.0, 2.0])),
-        (RationalTermComplexPair(PolynomialRoot(value=3.0 + 1.0j, multiplicity=1, is_complex_pair=True), [1.0]), Polynomial([1.0, 2.0])),
-        (RationalTermComplexPair(PolynomialRoot(value=3.0 - 1.0j, multiplicity=2, is_complex_pair=True), [1.0]), Polynomial([1.0, 2.0])),
-        (RationalTermComplexPair(PolynomialRoot(value=3.0 - 1.0j, multiplicity=1, is_complex_pair=True), [1.0]), Polynomial([1.0])),
-    ]
+        (RationalTerm(PolynomialRoot(value=3.0), [1.0]), Polynomial([1.0, 2.0])),
+        (
+            RationalTerm(PolynomialRoot(value=3.0, multiplicity=3), [1.0]),
+            Polynomial([1.0, 2.0, 3.0]),
+        ),
+        (RationalTerm(PolynomialRoot(value=3.0), [1.0]), Polynomial([-1.0])),
+        (
+            RationalTerm(PolynomialRoot(value=3.0 + 1.0j), [1.0]),
+            Polynomial([-1.0, 2.0]),
+        ),
+    ],
 )
-def test_rational_term_polynomial_product(rterm: RationalTerm, poly: Polynomial) -> None:
+def test_rational_term_polynomial_product(
+    rterm: RationalTerm, poly: Polynomial
+) -> None:
     """Test the product of a RationalTerm with a Polynomial."""
     out_terms, out_poly = RationalTerm.product_w_polynomial(rterm, poly)
 
     for term in out_terms:
-        assert isinstance(term, RationalTermBase)
+        assert isinstance(term, RationalTerm)
 
     x = np.linspace(-1, 1, 50)
-    
+
     y1 = rterm(x) * poly(x)
     y2 = np.sum([term(x) for term in out_terms], axis=0) + out_poly(x)
     assert np.allclose(y1, y2)
 
+
 def test_rational_term_neg() -> None:
-    
-    rterm = RationalTerm(PolynomialRoot(value=3.0+1.0j, is_complex_pair=True), [1.0, 2.0])
-    
+
+    rterm = RationalTerm(
+        PolynomialRoot(value=3.0 + 1.0j), 1.0
+    )
+
     x = np.linspace(-1, 1, 50)
-    y1 = rterm(x)*(-1)
+    y1 = rterm(x) * (-1)
     y2 = (-rterm)(x)
-    
+
     assert np.allclose(y1, y2)
     assert isinstance((-rterm), rterm.__class__)
-    assert ((-rterm).root == rterm.root)
-    
-
-@pytest.mark.parametrize(
-    "pterm",
-    [
-        RationalTermComplexPair(PolynomialRoot(value=3.0+1.0j, is_complex_pair=True), [1.0, 2.0]),
-        RationalTermComplexPair(PolynomialRoot(value=-2.0+1.0j, is_complex_pair=True), [3.0]),
-        RationalTermComplexPair(PolynomialRoot(value=-2.0+1.0j, is_complex_pair=True), [3.0j]),
-        RationalTermComplexPair(PolynomialRoot(value=-2.0+1.0j, is_complex_pair=True), [0.0, 1.0]),
-    ]
-)
-def test_rational_term_split(pterm: RationalTermComplexPair) -> None:
-    """Test the split method of the RationalTermComplexPair class."""
-    rterm1, rterm2 = pterm.split()
-    
-    assert isinstance(rterm1, RationalTermSingle)
-    assert isinstance(rterm2, RationalTermSingle)
-    assert rterm1.root.value == pterm.root.value
-    assert rterm2.root.value == pterm.root.value.conjugate()
-    
-    x = np.linspace(-1, 1, 50)
-    
-    y1 = pterm(x)
-    y2 = rterm1(x) + rterm2(x)
-    
-    assert np.allclose(y1, y2)
+    assert (-rterm).root == rterm.root
