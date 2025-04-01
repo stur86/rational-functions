@@ -59,46 +59,7 @@ def catalogue_roots(
             r_val = complex(r_val)
         roots_mults.append((r_val, mult))
 
-    # Group together complex conjugate pairs
-    root_pairs_mults: list[tuple[complex, int]] = []
-    root_single_mults: list[tuple[complex, int]] = []
-    extracted[:] = False
-    roots_vals = np.array(roots_mults)[:, 0]
-
-    for i, (r, m) in enumerate(roots_mults):
-        if extracted[i]:
-            continue
-
-        conj_i = None
-        if np.iscomplex(r):
-            # Look for a conjugate
-            found_i = np.where(
-                np.isclose(roots_vals[i + 1 :], r.conjugate(), atol=atol, rtol=rtol)
-            )[0]
-            if len(found_i) == 1:
-                conj_i = int(found_i[0] + i + 1)
-
-        if conj_i is not None:
-            conj_m = roots_mults[conj_i][1]
-            pair_m = min(m, conj_m)
-            m -= pair_m
-            conj_m -= pair_m
-
-            root_pairs_mults.append((r, pair_m))
-            if conj_m > 0:
-                root_single_mults.append(
-                    ((r + np.conj(roots_vals[conj_i])) / 2.0, conj_m)
-                )
-            extracted[conj_i] = True
-
-        if m > 0:
-            root_single_mults.append((r, m))
-        extracted[i] = True
-
-    root_objs = [PolynomialRoot(r, m, False) for r, m in root_single_mults]
-    root_objs += [PolynomialRoot(r, m, True) for r, m in root_pairs_mults]
-
-    return root_objs
+    return list([PolynomialRoot(r, m) for r, m in roots_mults])
 
 
 def partial_frac_decomposition(
