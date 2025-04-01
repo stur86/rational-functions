@@ -75,10 +75,10 @@ class RationalTerm:
         r2 = term2._root
 
         if r1.is_equivalent(r2):
-            return RationalTerm(
+            return [RationalTerm(
                 r1.with_multiplicity(r1.multiplicity+r2.multiplicity),
                 term1._coef*term2._coef
-            )
+            )]
 
         roots = [r1, r2]
         num = Polynomial([term1._coef*term2._coef])
@@ -102,13 +102,12 @@ class RationalTerm:
 
         num = poly * term._coef
         r = term._root
-        roots = [r.with_multiplicity(m) for m in range(1, r.multiplicity+1)]
 
         den = r.monic_polynomial()
         poly_out = num // den
         poly_rem = num % den
 
-        terms = partial_frac_decomposition(poly_rem, roots)
+        terms = partial_frac_decomposition(poly_rem, [r])
 
         return terms, poly_out
 

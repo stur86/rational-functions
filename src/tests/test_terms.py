@@ -119,18 +119,18 @@ def test_rational_term_str(rterm: RationalTerm, snapshot: Snapshot) -> None:
     "rterm1,rterm2",
     [
         (
-            RationalTerm(PolynomialRoot(value=3.0), [1.0]),
-            RationalTerm(PolynomialRoot(value=4.0), [-1.0]),
+            RationalTerm(PolynomialRoot(value=3.0), 1.0),
+            RationalTerm(PolynomialRoot(value=4.0), -1.0),
         ),
         (
-            RationalTerm(PolynomialRoot(value=3.0), [1.0]),
+            RationalTerm(PolynomialRoot(value=3.0), 1.0),
             RationalTerm(
-                PolynomialRoot(value=2.0 + 1.0j), [-1.0, 0.5]
+                PolynomialRoot(value=2.0 + 1.0j), -1.0
             ),
         ),
         (
-            RationalTerm(PolynomialRoot(value=3.0), [1.0]),
-            RationalTerm(PolynomialRoot(value=3.0, multiplicity=2), [-1.0]),
+            RationalTerm(PolynomialRoot(value=3.0), 2.0),
+            RationalTerm(PolynomialRoot(value=3.0, multiplicity=2), -1.0+2.0j),
         ),
     ],
 )
@@ -151,14 +151,14 @@ def test_rational_term_product(rterm1: RationalTerm, rterm2: RationalTerm) -> No
 @pytest.mark.parametrize(
     "rterm,poly",
     [
-        (RationalTerm(PolynomialRoot(value=3.0), [1.0]), Polynomial([1.0, 2.0])),
+        (RationalTerm(PolynomialRoot(value=3.0), 1.0), Polynomial([1.0, 2.0])),
         (
-            RationalTerm(PolynomialRoot(value=3.0, multiplicity=3), [1.0]),
+            RationalTerm(PolynomialRoot(value=3.0, multiplicity=3), 1.0),
             Polynomial([1.0, 2.0, 3.0]),
         ),
-        (RationalTerm(PolynomialRoot(value=3.0), [1.0]), Polynomial([-1.0])),
+        (RationalTerm(PolynomialRoot(value=3.0), 1.0), Polynomial([-1.0])),
         (
-            RationalTerm(PolynomialRoot(value=3.0 + 1.0j), [1.0]),
+            RationalTerm(PolynomialRoot(value=3.0 + 1.0j), 1.0),
             Polynomial([-1.0, 2.0]),
         ),
     ],

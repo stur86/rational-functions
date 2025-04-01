@@ -119,7 +119,7 @@ def partial_frac_decomposition(
     from rational_functions.terms import RationalTerm
 
     # Total degree of the denominator
-    deg = sum([r.multiplicity * (1 + r.is_complex_pair) for r in denominator_roots])
+    deg = sum([r.multiplicity for r in denominator_roots])
 
     # We construct a linear system
     M = np.zeros((deg, deg), dtype=np.complex128)
@@ -140,10 +140,6 @@ def partial_frac_decomposition(
             # Column corresponding to constant term
             M[: len(c), m_i] = c
             m_i += 1
-            if r.is_complex_pair:
-                # Column corresponding to linear term (only for complex pairs)
-                M[1 : len(c) + 1, m_i] = c
-                m_i += 1
 
     y = np.zeros(deg, dtype=np.complex128)
     # We build the right-hand side of the system
@@ -157,12 +153,8 @@ def partial_frac_decomposition(
     # We collect the coefficients and build the terms
     for r in denominator_roots:
         for i in range(r.multiplicity):
-            if r.is_complex_pair:
-                coef = x[m_i : m_i + 2]
-                m_i += 2
-            else:
-                coef = x[m_i : m_i + 1]
-                m_i += 1
+            coef = x[m_i : m_i + 1]
+            m_i += 1
             terms.append(RationalTerm(r.with_multiplicity(i + 1), coef))
 
     return terms
