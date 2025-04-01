@@ -1,4 +1,3 @@
-from itertools import chain
 
 from .roots import PolynomialRoot
 
