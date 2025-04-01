@@ -88,6 +88,27 @@ class PolynomialRoot:
         
         return self if self.multiplicity >= root.multiplicity else root
     
+    def split(self) -> tuple["PolynomialRoot", "PolynomialRoot"]:
+        """For a complex pair root, split it into two single
+        complex conjugate roots.
+        
+        Returns:
+            tuple[PolynomialRoot, PolynomialRoot]: The two single roots
+            
+        Raises:
+            AssertionError: if this is not a complex pair root
+        """
+        
+        assert self.is_complex_pair, "Root is not a complex pair"
+        
+        v1 = self.value
+        v2 = v1.conjugate()
+        
+        return (
+            PolynomialRoot(v1, self.multiplicity, False),
+            PolynomialRoot(v2, self.multiplicity, False)
+        )
+    
     def __hash__(self) -> int:
         """Return a hash of the root."""
         vr = self.value.real

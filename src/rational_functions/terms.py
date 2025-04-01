@@ -308,10 +308,8 @@ class RationalTermComplexPair(RationalTermBase):
     def split(self) -> tuple["RationalTermSingle", "RationalTermSingle"]:
         """Split the term into two terms."""
         r = self._root
-        k = r.multiplicity
         
-        r1 = PolynomialRoot(value=r.value, multiplicity=k, is_complex_pair=False)
-        r2 = PolynomialRoot(value=r.value.conjugate(), multiplicity=k, is_complex_pair=False)
+        r1, r2 = r.split()
         rv1 = r1.value
         rv2 = r2.value
         
