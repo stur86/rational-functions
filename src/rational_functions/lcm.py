@@ -1,4 +1,3 @@
-
 from .roots import PolynomialRoot
 
 class RootLCM:
