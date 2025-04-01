@@ -10,3 +10,5 @@ def test_lcm():
     lcm = RootLCM(roots)
     
     print(lcm)
+    print(lcm.polynomial)
+    print(lcm.polynomial.roots())
