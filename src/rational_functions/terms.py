@@ -163,7 +163,7 @@ class RationalTerm:
                 Polynomial._superscript_mapping
             )
 
-        return f"{num} / ({den}){mul_str}"
+        return f"{num:.2G} / ({den}){mul_str}"
 
 
 class RationalIntegralTermBase(ABC):

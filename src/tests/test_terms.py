@@ -102,10 +102,10 @@ def test_rational_term_eval(root: PolynomialRoot, a: complex):
 @pytest.mark.parametrize(
     "rterm",
     [
-        RationalTerm(PolynomialRoot(value=3.0), [1.0]),
-        RationalTerm(PolynomialRoot(value=3.0, multiplicity=2), [-1.0]),
-        RationalTerm(PolynomialRoot(value=3.0 + 1.0j), [1.0]),
-        RationalTerm(PolynomialRoot(value=3.0 + 1.0j, multiplicity=2), [-1.0]),
+        RationalTerm(PolynomialRoot(value=3.0), 1.0),
+        RationalTerm(PolynomialRoot(value=3.0, multiplicity=2), -1.0),
+        RationalTerm(PolynomialRoot(value=3.0 + 1.0j), 1.0),
+        RationalTerm(PolynomialRoot(value=3.0 + 1.0j, multiplicity=2), -1.0),
     ],
 )
 def test_rational_term_str(rterm: RationalTerm, snapshot: Snapshot) -> None:
