@@ -9,6 +9,7 @@ from numpy.polynomial.polyutils import _add as np_poly_add
 from rational_functions.terms import RationalTerm
 from rational_functions.decomp import catalogue_roots, partial_frac_decomposition
 from rational_functions.roots import PolynomialRoot
+from rational_functions.lcm import RootLCM
 
 _RFuncOpCompatibleType = Union["RationalFunction", Polynomial, np.number]
 
@@ -28,6 +29,7 @@ class RationalFunction:
 
     _poly: Polynomial
     _terms: list[RationalTerm]
+    _lcm: RootLCM
     
     def __init__(self, terms: list[RationalTerm], poly: Polynomial | None = None):
         """Initialize the rational function.
@@ -38,10 +40,11 @@ class RationalFunction:
         """
 
         self._terms = list(terms)
+        self._lcm = RootLCM([term.root for term in self._terms])
         self._poly = poly if poly is not None else Polynomial([0.0])
         self._poly = self._poly.trim()
-        
-    @cached_property
+    
+    @property
     def poles(self) -> list[PolynomialRoot]:
         """Get the poles of the rational function.
 
@@ -49,21 +52,7 @@ class RationalFunction:
             list[PolynomialRoot]: List of poles.
         """
         
-        pole_dict: dict[tuple, PolynomialRoot] = {}
-        
-        for term in self._terms:
-            r = term.root
-            rvr = r.value.real
-            rvi = r.value.imag
-            if r.is_complex_pair:
-                rvi = abs(rvi)
-            key = (rvr, rvi, r.is_complex_pair)
-            if key in pole_dict:
-                pole_dict[key] = pole_dict[key].highest(r)
-            else:
-                pole_dict[key] = r
-                
-        return list(pole_dict.values())
+        return self._lcm.roots
     
     @cached_property
     def numerator(self) -> Polynomial:
@@ -72,11 +61,10 @@ class RationalFunction:
         Returns:
             Polynomial: Numerator polynomial.
         """
-        den = self.denominator
-        num = self._poly*den
+        num = Polynomial([0.0])
         for term in self._terms:
-            num += Polynomial(term._coefs)*(den // term.root.monic_polynomial())
-
+            num += term.coef*self._lcm.residual(term.root.value, term.root.multiplicity)
+        
         return num
         
     @cached_property
@@ -86,12 +74,7 @@ class RationalFunction:
         Returns:
             Polynomial: Denominator polynomial.
         """
-        poles = self.poles
-        monics = [r.monic_polynomial() for r in poles]
-        den_poly = Polynomial([1.0])
-        for m in monics:
-            den_poly *= m
-        return den_poly        
+        return self._lcm.polynomial
 
     def __neg__(self) -> "RationalFunction":
         """Negate the rational function.
@@ -142,12 +125,14 @@ class RationalFunction:
             was_added = False
             for i, existing_term in enumerate(sum_terms):
                 if existing_term.root == term.root:
-                    coefs = sum_terms[i]._coefs + term._coefs
-                    sum_terms[i] = RationalTerm(term.root, coefs)
+                    sum_terms[i] = RationalTerm(term.root, existing_term._coef+term._coef)
                     was_added = True
                     break
             if not was_added:
                 sum_terms.append(term)
+        
+        # Remove terms with zero coefficients
+        sum_terms = [term for term in sum_terms if term._coef != 0.0]
 
         ans = RationalFunction(
             sum_terms,
@@ -196,6 +181,20 @@ class RationalFunction:
         """
         
         return (- self) + other
+    
+    def __mul__(self, other: _RFuncOpCompatibleType) -> "RationalFunction":
+        """Multiply two rational functions.
+
+        Args:
+            other (RationalFunction): Other rational function to multiply.
+
+        Returns:
+            RationalFunction: Resulting rational function.
+        """
+                        
+        return None
+        
+
 
     def __call__(self, x: ArrayLike) -> ArrayLike:
         """Evaluate the rational function at given points.
@@ -246,6 +245,10 @@ class RationalFunction:
         poly_quot = numerator // denominator
         # Residual numerator
         poly_rem = numerator % denominator
+        # Make denominator monic
+        c = denominator.coef[-1]
+        denominator /= c
+        numerator /= c
 
         # Find roots
         if denominator.degree() == 0:

@@ -26,3 +26,4 @@ def test_ratfunc_from_frac(num: Polynomial, den: Polynomial):
     assert np.allclose(y1, y2)
     assert isinstance(ratfunc, RationalFunction)
     assert ratfunc._poly == num // den
+    

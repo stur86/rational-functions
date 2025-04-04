@@ -10,7 +10,7 @@ from rational_functions.roots import PolynomialRoot
     "terms,poly",
     [
         (
-            [RationalTerm(PolynomialRoot(3.0), [1.0])],
+            [RationalTerm(PolynomialRoot(3.0), 1.0)],
             None
         ),
         (
@@ -18,7 +18,7 @@ from rational_functions.roots import PolynomialRoot
             Polynomial([1.0, 2.0])
         ),
         (
-            [RationalTerm(PolynomialRoot(2.0+1.0j, is_complex_pair=True), [1.0])],
+            [RationalTerm(PolynomialRoot(2.0+1.0j), 1.0), RationalTerm(PolynomialRoot(2.0-1.0j), 1.0)],
             Polynomial([1.0, 2.0])
         )
     ]
@@ -34,30 +34,5 @@ def test_ratfunc_eval(terms: list[RationalTerm], poly: Polynomial | None):
         y2 += poly(x)
     assert np.allclose(y1, y2)
 
-
-@pytest.mark.parametrize(
-    "terms,poles",
-    [
-        (
-            [RationalTerm(PolynomialRoot(3.0), [1.0])],
-            [PolynomialRoot(3.0)]
-        ),
-        (
-            [RationalTerm(PolynomialRoot(3.0), [1.0]), RationalTerm(PolynomialRoot(3.0, 2), [1.0])],
-            [PolynomialRoot(3.0, 2)]
-        ),
-        (
-            [RationalTerm(PolynomialRoot(3.0), [1.0]), RationalTerm(PolynomialRoot(3.0+1.0j, is_complex_pair=True), [1.0, 2.0]), 
-             RationalTerm(PolynomialRoot(3.0-1.0j, multiplicity=2, is_complex_pair=True), [1.0, 2.0])],
-            [PolynomialRoot(3.0), PolynomialRoot(3.0+1.0j, 2, is_complex_pair=True)]
-        )
-    ]
-)
-def test_ratfunc_poles(terms: list[RationalTerm], poles: list[PolynomialRoot]):
-    """Test the poles of the rational function."""
-    rat_func = RationalFunction(terms, None)
-    
-    # Hashes are computed so that they are equal for equivalent roots
-    assert set(map(hash, rat_func.poles)) == set(map(hash, poles))
 
     
