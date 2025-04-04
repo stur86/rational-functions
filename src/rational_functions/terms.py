@@ -44,11 +44,11 @@ class RationalTerm:
     def root(self) -> PolynomialRoot:
         """Return the root of the term."""
         return self._root
-
+    
     @property
-    def numerator(self) -> Polynomial:
-        """Return the numerator of the term."""
-        return Polynomial([self._coef])
+    def coef(self) -> complex:
+        """Return the coefficient of the term."""
+        return self._coef
 
     @property
     def denominator(self) -> Polynomial:

@@ -55,8 +55,7 @@ def test_log_pair_term():
 def test_rational_term_num_den(root: PolynomialRoot):
     term = RationalTerm(root, 1.0)
 
-    assert term._coef == 1.0
-    assert term.numerator == np.polynomial.Polynomial([1.0])
+    assert term.coef == 1.0
     assert (
         term.denominator
         == np.polynomial.Polynomial([-root.value, 1.0]) ** root.multiplicity
