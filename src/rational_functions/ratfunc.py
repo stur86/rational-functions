@@ -110,7 +110,7 @@ class RationalFunction:
                 if _get_callercode_safe(i) == polyadd.__code__:
                     # This means it's being called from inside a Polynomial.__add__ method
                     # which is not what we want
-                    raise ValueError("Can not add a polynomial to a rational function.")
+                    return NotImplemented
 
         if is_other_ratfunc:
             other_terms = list(other._terms)
@@ -121,7 +121,7 @@ class RationalFunction:
             # If other is a scalar, convert it to a polynomial
             other_poly = Polynomial([other])
         else:
-            raise TypeError("Unsupported type for addition: {}".format(type(other)))
+            return NotImplemented
 
         sum_terms = RationalTerm.simplify(self._terms + other_terms)
 
@@ -191,7 +191,7 @@ class RationalFunction:
                 if _get_callercode_safe(i) == polymul.__code__:
                     # This means it's being called from inside a Polynomial.__mul__ method
                     # which is not what we want
-                    raise ValueError("Can not add a polynomial to a rational function.")
+                    return NotImplemented
 
         if is_other_ratfunc:
             other_poly = other._poly
@@ -202,9 +202,7 @@ class RationalFunction:
             # If other is a scalar, convert it to a polynomial
             other_poly = Polynomial([other])
         else:
-            raise TypeError(
-                "Unsupported type for multiplication: {}".format(type(other))
-            )
+            return NotImplemented
 
         mul_poly = self._poly * other_poly
         mul_terms: list[RationalTerm] = []
