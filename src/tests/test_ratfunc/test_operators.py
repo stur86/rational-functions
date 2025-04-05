@@ -201,3 +201,46 @@ def test_rfunc_poly_mul(rf: RationalFunction, p: Polynomial) -> None:
 
     assert np.allclose(y0, y1)
     assert np.allclose(y0, y2)
+    
+
+@pytest.mark.parametrize(
+    "rf,s",
+    product(_test_ratfuncs, _test_scalars),
+)
+def test_rfunc_scalar_mul(rf: RationalFunction, s: complex) -> None:
+    """Test multiplication of a rational function and a scalar."""
+    x = np.linspace(-1, 1, 50)
+    
+    m1 = rf * s
+    m2 = s * rf
+    
+    assert isinstance(m1, RationalFunction)
+    assert isinstance(m2, RationalFunction)
+    
+    y0 = rf(x) * s
+    y1 = m1(x)
+    y2 = m2(x)
+    assert np.allclose(y0, y1)
+    assert np.allclose(y0, y2)
+
+@pytest.mark.parametrize(
+    "rf,m",
+    product(_test_ratfuncs, [1, 2, 3])
+)
+def test_rfunc_deriv(rf: RationalFunction, m: int) -> None:
+    """Test derivative of a rational function."""
+    x = np.linspace(-1, 1, 1000)
+    
+    d1 = rf.deriv(m)
+        
+    assert isinstance(d1, RationalFunction)
+    
+    y0 = rf(x)
+    for _ in range(m):
+        y0 = np.gradient(y0, x, edge_order=2)
+
+    y1 = d1(x)
+
+    # Exclude edges from comparison, and use a relaxed tolerance
+    # due to flaws in the numerical derivative
+    assert np.allclose(y0[m:-m], y1[m:-m], rtol=5e-3)

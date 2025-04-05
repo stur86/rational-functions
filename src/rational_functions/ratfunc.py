@@ -238,6 +238,21 @@ class RationalFunction:
         """
 
         return self * other
+    
+    def deriv(self, m: int = 1) -> "RationalFunction":
+        """Differentiate the rational function.
+
+        Args:
+            m (int, optional): Order of the derivative. Defaults to 1.
+
+        Returns:
+            RationalFunction: Derivative of the rational function.
+        """
+        
+        diff_poly = self._poly.deriv(m)
+        diff_terms = [term.deriv(m) for term in self._terms]
+        
+        return RationalFunction(diff_terms, diff_poly)
 
     def __call__(self, x: ArrayLike) -> ArrayLike:
         """Evaluate the rational function at given points.

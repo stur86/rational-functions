@@ -147,16 +147,22 @@ class RationalTerm:
         den = x - r.value
         return self._coef / den**r.multiplicity
 
-    def deriv(self) -> "RationalTerm":
+    def deriv(self, m: int = 1) -> "RationalTerm":
         """Compute the derivative of the term.
+        
+        Args:
+            m (int): Order of the derivative
+                Defaults to 1.
 
         Returns:
             RationalTerm: Term of the derivative
         """
+        
+        assert m >= 1, "Derivative order must be greater than or equal to 1"
 
         r = self._root
-        r_d = PolynomialRoot(value=r.value, multiplicity=r.multiplicity + 1)
-        a = -self._coef * r.multiplicity
+        r_d = PolynomialRoot(value=r.value, multiplicity=r.multiplicity + m)
+        a = self._coef * np.prod(r.multiplicity+np.arange(m))*(-1)**m
         return RationalTerm(r_d, a)
 
     def integ(self) -> tuple[RationalIntegralGeneralTerm]:
