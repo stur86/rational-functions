@@ -256,7 +256,7 @@ class RationalFunction:
             return cls([], poly_quot)
         den_roots = catalogue_roots(denominator, atol=atol, rtol=rtol, imtol=imtol)
         rterms = partial_frac_decomposition(
-            poly_rem,
+            poly_rem.coef,
             den_roots,
         )
 

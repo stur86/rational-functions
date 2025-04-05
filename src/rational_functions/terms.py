@@ -81,8 +81,7 @@ class RationalTerm:
             )]
 
         roots = [r1, r2]
-        num = Polynomial([term1._coef*term2._coef])
-        return partial_frac_decomposition(num, roots)
+        return partial_frac_decomposition([term1.coef*term2.coef], roots)
 
     @classmethod
     def product_w_polynomial(
@@ -107,7 +106,7 @@ class RationalTerm:
         poly_out = num // den
         poly_rem = num % den
 
-        terms = partial_frac_decomposition(poly_rem, [r])
+        terms = partial_frac_decomposition(poly_rem.coef, [r])
 
         return terms, poly_out
 

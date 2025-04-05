@@ -2,6 +2,7 @@
 
 import numpy as np
 from numpy.polynomial import Polynomial
+from numpy.typing import NDArray
 from .roots import PolynomialRoot
 import typing
 
@@ -63,12 +64,12 @@ def catalogue_roots(
 
 
 def partial_frac_decomposition(
-    numerator: Polynomial, denominator_roots: list[PolynomialRoot]
+    num_coef: NDArray[np.number], denominator_roots: list[PolynomialRoot]
 ) -> list["RationalTerm"]:
     """Perform a partial fraction decomposition of a rational function.
 
     Args:
-        numerator (Polynomial): Numerator of the rational function.
+        num_coef (NDArray[np.number]): Coefficients of the numerator of the rational function.
         denominator_roots (list[PolynomialRoot]): Roots of the denominator polynomial.
 
     Returns:
@@ -104,7 +105,7 @@ def partial_frac_decomposition(
 
     y = np.zeros(deg, dtype=np.complex128)
     # We build the right-hand side of the system
-    y[:len(numerator.coef)] = numerator.coef
+    y[:len(num_coef)] = num_coef
 
     # Solving gives us the corresponding coefficients of the partial fractions
     x = np.linalg.solve(M, y)

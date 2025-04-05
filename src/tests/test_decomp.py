@@ -41,7 +41,7 @@ def test_cat_roots(roots):
 def test_partial_frac_decomp(numerator: Polynomial, denominator: Polynomial) -> None:
     
     poles = catalogue_roots(denominator)
-    pfracs = partial_frac_decomposition(numerator, poles)
+    pfracs = partial_frac_decomposition(numerator.coef, poles)
     
     x = np.linspace(-1, 1, 50)
     
