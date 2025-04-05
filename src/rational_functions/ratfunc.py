@@ -5,7 +5,7 @@ from types import FrameType
 from typing import Union
 from numpy.typing import ArrayLike
 from numpy.polynomial import Polynomial
-from numpy.polynomial.polyutils import _add as np_poly_add
+from numpy.polynomial.polynomial import polyadd, polymul
 from rational_functions.terms import RationalTerm
 from rational_functions.decomp import catalogue_roots, partial_frac_decomposition
 from rational_functions.roots import PolynomialRoot
@@ -13,13 +13,14 @@ from rational_functions.lcm import RootLCM
 
 _RFuncOpCompatibleType = Union["RationalFunction", Polynomial, np.number]
 
+
 def _get_callercode_safe(depth: int) -> FrameType | None:
     try:
         return sys._getframe(depth).f_code
     except ValueError:
         # If the stack frame is not available, return None
         return None
-    
+
 
 class RationalFunction:
     """Rational function represented by
@@ -30,7 +31,7 @@ class RationalFunction:
     _poly: Polynomial
     _terms: list[RationalTerm]
     _lcm: RootLCM
-    
+
     def __init__(self, terms: list[RationalTerm], poly: Polynomial | None = None):
         """Initialize the rational function.
 
@@ -39,11 +40,11 @@ class RationalFunction:
             poly (Polynomial, optional): Residual polynomial. Defaults to None.
         """
 
-        self._terms = list(terms)
+        self._terms = RationalTerm.simplify(terms)
         self._lcm = RootLCM([term.root for term in self._terms])
         self._poly = poly if poly is not None else Polynomial([0.0])
         self._poly = self._poly.trim()
-    
+
     @property
     def poles(self) -> list[PolynomialRoot]:
         """Get the poles of the rational function.
@@ -51,9 +52,9 @@ class RationalFunction:
         Returns:
             list[PolynomialRoot]: List of poles.
         """
-        
+
         return self._lcm.roots
-    
+
     @cached_property
     def numerator(self) -> Polynomial:
         """Get the numerator polynomial of the rational function.
@@ -63,10 +64,12 @@ class RationalFunction:
         """
         num = Polynomial([0.0])
         for term in self._terms:
-            num += term.coef*self._lcm.residual(term.root.value, term.root.multiplicity)
-        
+            num += term.coef * self._lcm.residual(
+                term.root.value, term.root.multiplicity
+            )
+
         return num
-        
+
     @cached_property
     def denominator(self) -> Polynomial:
         """Get the denominator polynomial of the rational function.
@@ -94,18 +97,17 @@ class RationalFunction:
         Returns:
             RationalFunction: Resulting rational function.
         """
-        sum_terms = list(self._terms)
         other_terms = []
         other_poly: Polynomial
-        
+
         is_other_ratfunc = isinstance(other, RationalFunction)
 
         if not is_other_ratfunc:
             # This check is necessary to avoid additions Polynomial+RationalFunction
             # being delegated to the Polynomial.__add__ method,
             # which returns a Polynomial object with RationalFunction coefficients.
-            for i in range(1, 4):
-                if _get_callercode_safe(i) == np_poly_add.__code__:                
+            for i in range(3, 5):
+                if _get_callercode_safe(i) == polyadd.__code__:
                     # This means it's being called from inside a Polynomial.__add__ method
                     # which is not what we want
                     raise ValueError("Can not add a polynomial to a rational function.")
@@ -121,18 +123,7 @@ class RationalFunction:
         else:
             raise TypeError("Unsupported type for addition: {}".format(type(other)))
 
-        for term in other_terms:
-            was_added = False
-            for i, existing_term in enumerate(sum_terms):
-                if existing_term.root == term.root:
-                    sum_terms[i] = RationalTerm(term.root, existing_term._coef+term._coef)
-                    was_added = True
-                    break
-            if not was_added:
-                sum_terms.append(term)
-        
-        # Remove terms with zero coefficients
-        sum_terms = [term for term in sum_terms if term._coef != 0.0]
+        sum_terms = RationalTerm.simplify(self._terms + other_terms)
 
         ans = RationalFunction(
             sum_terms,
@@ -154,10 +145,8 @@ class RationalFunction:
             RationalFunction: Resulting rational function.
         """
         return self + other
-    
-    def __sub__(
-        self, other: _RFuncOpCompatibleType
-    ) -> "RationalFunction":
+
+    def __sub__(self, other: _RFuncOpCompatibleType) -> "RationalFunction":
         """Subtract two rational functions.
 
         Args:
@@ -167,10 +156,8 @@ class RationalFunction:
             RationalFunction: Resulting rational function.
         """
         return self + (-other)
-    
-    def __rsub__(
-        self, other: _RFuncOpCompatibleType
-    ) -> "RationalFunction":
+
+    def __rsub__(self, other: _RFuncOpCompatibleType) -> "RationalFunction":
         """Right subtract operator for RationalFunction.
 
         Args:
@@ -179,9 +166,9 @@ class RationalFunction:
         Returns:
             RationalFunction: Resulting rational function.
         """
-        
-        return (- self) + other
-    
+
+        return (-self) + other
+
     def __mul__(self, other: _RFuncOpCompatibleType) -> "RationalFunction":
         """Multiply two rational functions.
 
@@ -191,10 +178,68 @@ class RationalFunction:
         Returns:
             RationalFunction: Resulting rational function.
         """
-                        
-        return None
-        
 
+        other_poly: Polynomial
+        other_terms: list[RationalTerm] = []
+        is_other_ratfunc = isinstance(other, RationalFunction)
+
+        if not is_other_ratfunc:
+            # This check is necessary to avoid additions Polynomial+RationalFunction
+            # being delegated to the Polynomial.__mul__ method,
+            # which returns a Polynomial object with RationalFunction coefficients.
+            for i in range(3, 5):
+                if _get_callercode_safe(i) == polymul.__code__:
+                    # This means it's being called from inside a Polynomial.__mul__ method
+                    # which is not what we want
+                    raise ValueError("Can not add a polynomial to a rational function.")
+
+        if is_other_ratfunc:
+            other_poly = other._poly
+            other_terms = list(other._terms)
+        elif isinstance(other, Polynomial):
+            other_poly = other
+        elif np.isscalar(other):
+            # If other is a scalar, convert it to a polynomial
+            other_poly = Polynomial([other])
+        else:
+            raise TypeError(
+                "Unsupported type for multiplication: {}".format(type(other))
+            )
+
+        mul_poly = self._poly * other_poly
+        mul_terms: list[RationalTerm] = []
+
+        for term in self._terms:
+            # Multiply the term by the other polynomial
+            new_terms, new_poly = RationalTerm.product_w_polynomial(term, other_poly)
+            mul_terms.extend(new_terms)
+            mul_poly += new_poly
+
+        for term in other_terms:
+            # Multiply the term by the other polynomial
+            new_terms, new_poly = RationalTerm.product_w_polynomial(term, self._poly)
+            mul_terms.extend(new_terms)
+            mul_poly += new_poly
+
+        # Term-term multiplication
+        for term1 in self._terms:
+            for term2 in other_terms:
+                new_terms = RationalTerm.product(term1, term2)
+                mul_terms.extend(new_terms)
+
+        return RationalFunction(mul_terms, mul_poly)
+
+    def __rmul__(self, other: _RFuncOpCompatibleType) -> "RationalFunction":
+        """Right multiply operator for RationalFunction.
+
+        Args:
+            other (RationalFunction): Other rational function to multiply.
+
+        Returns:
+            RationalFunction: Resulting rational function.
+        """
+
+        return self * other
 
     def __call__(self, x: ArrayLike) -> ArrayLike:
         """Evaluate the rational function at given points.

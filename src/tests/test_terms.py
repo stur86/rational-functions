@@ -191,3 +191,20 @@ def test_rational_term_neg() -> None:
     assert np.allclose(y1, y2)
     assert isinstance((-rterm), rterm.__class__)
     assert (-rterm).root == rterm.root
+
+def test_simplify() -> None:
+    """Test the simplify method of the RationalTerm class."""
+    rterm1 = RationalTerm(PolynomialRoot(value=3.0), 1.0)
+    rterm2 = RationalTerm(PolynomialRoot(value=3.0), 2.0)
+    rterm3 = RationalTerm(PolynomialRoot(value=4.0), -1.0)
+
+    terms = [rterm1, rterm2, rterm3]
+    simplified_terms = RationalTerm.simplify(terms)
+    # Sort them to ensure the order is consistent
+    simplified_terms.sort(key=lambda x: x.root.value)
+    # Check that the simplified terms are correct
+    assert len(simplified_terms) == 2
+    assert simplified_terms[0].root == rterm1.root
+    assert simplified_terms[1].root == rterm3.root
+    assert np.isclose(simplified_terms[0].coef, 3.0)
+    assert np.isclose(simplified_terms[1].coef, -1.0)

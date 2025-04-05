@@ -44,7 +44,7 @@ class RationalTerm:
     def root(self) -> PolynomialRoot:
         """Return the root of the term."""
         return self._root
-    
+
     @property
     def coef(self) -> complex:
         """Return the coefficient of the term."""
@@ -55,10 +55,8 @@ class RationalTerm:
         """Return the denominator of the term."""
         return self._root.monic_polynomial()
 
-    @classmethod
-    def product(
-        cls, term1: "RationalTerm", term2: "RationalTerm"
-    ) -> list["RationalTerm"]:
+    @staticmethod
+    def product(term1: "RationalTerm", term2: "RationalTerm") -> list["RationalTerm"]:
         """Compute and decompose the product of two rational terms. This method
         is not implemented as an overloaded operator __mul__ since the output is
         not a RationalTerm but a list of RationalTerms.
@@ -70,22 +68,23 @@ class RationalTerm:
             list[RationalTerm]: List of terms in the product
         """
 
-
         r1 = term1._root
         r2 = term2._root
 
         if r1.is_equivalent(r2):
-            return [RationalTerm(
-                r1.with_multiplicity(r1.multiplicity+r2.multiplicity),
-                term1._coef*term2._coef
-            )]
+            return [
+                RationalTerm(
+                    r1.with_multiplicity(r1.multiplicity + r2.multiplicity),
+                    term1._coef * term2._coef,
+                )
+            ]
 
         roots = [r1, r2]
-        return partial_frac_decomposition([term1.coef*term2.coef], roots)
+        return partial_frac_decomposition([term1.coef * term2.coef], roots)
 
-    @classmethod
+    @staticmethod
     def product_w_polynomial(
-        cls, term: "RationalTerm", poly: Polynomial
+        term: "RationalTerm", poly: Polynomial
     ) -> tuple[list["RationalTerm"], Polynomial]:
         """Compute and decompose the product of a rational term and a polynomial.
         This method is not implemented as an overloaded operator __mul__ since the output is
@@ -109,6 +108,30 @@ class RationalTerm:
         terms = partial_frac_decomposition(poly_rem.coef, [r])
 
         return terms, poly_out
+
+    @staticmethod
+    def simplify(terms: list["RationalTerm"]) -> list["RationalTerm"]:
+        """Simplify a list of RationalTerms by combining terms with the same root.
+
+        Args:
+            terms (list[RationalTerm]): List of RationalTerms to simplify
+
+        Returns:
+            list[RationalTerm]: Simplified list of RationalTerms
+        """
+
+        simplified_terms: dict[PolynomialRoot, complex] = {}
+        for term in terms:
+            if term.root in simplified_terms:
+                simplified_terms[term.root] += term.coef
+            else:
+                simplified_terms[term.root] = term.coef
+
+        return list([
+            RationalTerm(root, coef)
+            for root, coef in simplified_terms.items()
+            if coef != 0.0
+        ])
 
     def __call__(self, x: ArrayLike) -> ArrayLike:
         """Evaluate the term at the given x values.

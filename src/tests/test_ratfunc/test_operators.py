@@ -66,6 +66,9 @@ _test_ratfuncs = list(_test_ratfuncs)
 
 _test_ratfunc_pairs = self_product_w_o_duplicates(_test_ratfuncs)
 
+_test_polynomials = [Polynomial([1.0]), Polynomial([2.0, 3.0]), Polynomial([3.0, 4.0, 5.0])]
+_test_scalars = [1.0, 2.0, -1.0, -0.35, 2.2j, 3.0+1,0j]
+
 @pytest.mark.parametrize(
     "rf",
     _test_ratfuncs,
@@ -99,7 +102,7 @@ def test_rfunc_add(rf_l: RationalFunction, rf_r: RationalFunction) -> None:
 
 @pytest.mark.parametrize(
     "rf,p",
-    product(_test_ratfuncs, [Polynomial([1.0]), Polynomial([2.0, 3.0]), Polynomial([3.0, 4.0, 5.0])]),
+    product(_test_ratfuncs, _test_polynomials),
 )
 def test_rfunc_poly_add(rf: RationalFunction, p: Polynomial) -> None:
     
@@ -121,10 +124,33 @@ def test_rfunc_poly_add(rf: RationalFunction, p: Polynomial) -> None:
     assert np.allclose(y2, y3)
 
 @pytest.mark.parametrize(
+    "rf,s",
+    product(_test_ratfuncs, _test_scalars),
+)
+def test_rfunc_scalar_add(rf: RationalFunction, s: complex) -> None:
+    """Test addition of a rational function and a scalar.
+    """
+    
+    x = np.linspace(-1, 1, 50)
+    
+    s1 = rf+s
+    s2 = s+rf
+    
+    assert isinstance(s1, rf.__class__)
+    assert isinstance(s2, rf.__class__)
+
+    y1 = rf(x) + s
+    y2 = s1(x)
+    y3 = s2(x)
+    
+    assert np.allclose(y1, y2)
+    assert np.allclose(y1, y3)
+
+@pytest.mark.parametrize(
     "rf_l, rf_r",
     _test_ratfunc_pairs
 )
-def test_rfuc_sub(rf_l: RationalFunction, rf_r: RationalFunction) -> None:
+def test_rfunc_sub(rf_l: RationalFunction, rf_r: RationalFunction) -> None:
     """Test subtraction of two rational functions."""
     x = np.linspace(-1, 1, 50)
     y1 = rf_l(x) - rf_r(x)
@@ -132,3 +158,46 @@ def test_rfuc_sub(rf_l: RationalFunction, rf_r: RationalFunction) -> None:
 
     assert np.allclose(y1, y2)
     assert isinstance((rf_l - rf_r), rf_l.__class__)
+    
+@pytest.mark.parametrize(
+    "rf_l, rf_r",
+    _test_ratfunc_pairs
+)
+def test_rfunc_mul(rf_l: RationalFunction, rf_r: RationalFunction) -> None:
+    """Test multiplication of two rational functions."""
+    x = np.linspace(-1, 1, 50)
+    
+    m1 = rf_l * rf_r
+    m2 = rf_r * rf_l
+    
+    assert isinstance(m1, RationalFunction)
+    assert isinstance(m2, RationalFunction)
+
+
+    y0 = rf_l(x) * rf_r(x)
+    y1 = m1(x)
+    y2 = m2(x)
+
+    assert np.allclose(y0, y1)
+    assert np.allclose(y0, y2)
+
+@pytest.mark.parametrize(
+    "rf,p",
+    product(_test_ratfuncs, _test_polynomials),
+)
+def test_rfunc_poly_mul(rf: RationalFunction, p: Polynomial) -> None:
+    """Test multiplication of a rational function and a polynomial."""
+    x = np.linspace(-1, 1, 50)
+    
+    m1 = rf * p
+    m2 = p * rf
+        
+    assert isinstance(m1, RationalFunction)
+    assert isinstance(m2, RationalFunction)
+
+    y0 = rf(x) * p(x)
+    y1 = m1(x)
+    y2 = m2(x)
+
+    assert np.allclose(y0, y1)
+    assert np.allclose(y0, y2)
