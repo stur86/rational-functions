@@ -11,3 +11,7 @@ wheels/
 
 # Generated documentation
 site/*
+
+# Generated coverage reports
+.coverage
+htmlcov/

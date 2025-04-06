@@ -1,42 +1,32 @@
 import numpy as np
-import sys
 from functools import cached_property
-from types import FrameType
 from typing import Union
 from numpy.typing import ArrayLike
 from numpy.polynomial import Polynomial
-from numpy.polynomial.polynomial import polyadd, polymul
 from rational_functions.terms import RationalTerm
 from rational_functions.decomp import catalogue_roots, partial_frac_decomposition
 from rational_functions.roots import PolynomialRoot
 from rational_functions.lcm import RootLCM
+from rational_functions.utils import as_polynomial
 
 _RFuncOpCompatibleType = Union["RationalFunction", Polynomial, np.number]
-
-
-def _get_callercode_safe(depth: int) -> FrameType | None:
-    try:
-        return sys._getframe(depth).f_code
-    except ValueError:
-        # If the stack frame is not available, return None
-        return None
 
 
 class RationalFunction:
     r"""Rational function represented by
     sum of terms with a single pole for the proper part,
     plus a residual polynomial for the improper part.
-    
-    The rational function, given a polynomial 
+
+    The rational function, given a polynomial
     $p(x)$ and a list of terms with roots $r_i$, coefficients $c_i$
     and order $k_i$, is defined as:
-    
+
     $$
     R(x) = p(x)+\sum_{i=1}^n \frac{c_i}{(x - r_i)^{k_i}}
     $$
-        
-        
-    
+
+
+
     """
 
     _poly: Polynomial
@@ -44,8 +34,8 @@ class RationalFunction:
     _lcm: RootLCM
 
     def __init__(self, terms: list[RationalTerm], poly: Polynomial | None = None):
-        """Initialize the rational function. 
-        
+        """Initialize the rational function.
+
         Args:
             terms (list[RationalTerm]): List of terms.
             poly (Polynomial, optional): Residual polynomial. Defaults to None.
@@ -75,9 +65,7 @@ class RationalFunction:
         """
         num = Polynomial([0.0])
         for term in self._terms:
-            num += term.coef * self._lcm.residual(
-                term.pole, term.order
-            )
+            num += term.coef * self._lcm.residual(term.pole, term.order)
 
         return num
 
@@ -112,16 +100,6 @@ class RationalFunction:
         other_poly: Polynomial
 
         is_other_ratfunc = isinstance(other, RationalFunction)
-
-        if not is_other_ratfunc:
-            # This check is necessary to avoid additions Polynomial+RationalFunction
-            # being delegated to the Polynomial.__add__ method,
-            # which returns a Polynomial object with RationalFunction coefficients.
-            for i in range(3, 5):
-                if _get_callercode_safe(i) == polyadd.__code__:
-                    # This means it's being called from inside a Polynomial.__add__ method
-                    # which is not what we want
-                    return NotImplemented
 
         if is_other_ratfunc:
             other_terms = list(other._terms)
@@ -194,16 +172,6 @@ class RationalFunction:
         other_terms: list[RationalTerm] = []
         is_other_ratfunc = isinstance(other, RationalFunction)
 
-        if not is_other_ratfunc:
-            # This check is necessary to avoid additions Polynomial+RationalFunction
-            # being delegated to the Polynomial.__mul__ method,
-            # which returns a Polynomial object with RationalFunction coefficients.
-            for i in range(3, 5):
-                if _get_callercode_safe(i) == polymul.__code__:
-                    # This means it's being called from inside a Polynomial.__mul__ method
-                    # which is not what we want
-                    return NotImplemented
-
         if is_other_ratfunc:
             other_poly = other._poly
             other_terms = list(other._terms)
@@ -249,7 +217,7 @@ class RationalFunction:
         """
 
         return self * other
-    
+
     def __truediv__(self, other: _RFuncOpCompatibleType) -> "RationalFunction":
         """Divide two rational functions.
 
@@ -263,7 +231,7 @@ class RationalFunction:
             return self * other.reciprocal()
         elif isinstance(other, Polynomial):
             numerator = self.numerator
-            denominator = self.denominator*other
+            denominator = self.denominator * other
             return RationalFunction.from_fraction(
                 numerator,
                 denominator,
@@ -275,25 +243,25 @@ class RationalFunction:
             return RationalFunction(list(new_terms), new_poly)
 
         return NotImplemented
-        
+
     def reciprocal(self) -> "RationalFunction":
         r"""Get the reciprocal of the rational function.
-        
+
         $$
         R(x) = \frac{P(x)}{Q(x)} \implies R^{-1}(x) = \frac{Q(x)}{P(x)}
         $$
-        
+
         Returns:
             RationalFunction: Inverse of the rational function.
         """
         numerator = self.denominator
-        denominator = self.numerator+self._poly*numerator
-        
+        denominator = self.numerator + self._poly * numerator
+
         return RationalFunction.from_fraction(
             numerator,
             denominator,
         )
-    
+
     def deriv(self, m: int = 1) -> "RationalFunction":
         r"""Differentiate the rational function in x.
         
@@ -310,10 +278,10 @@ class RationalFunction:
         Returns:
             RationalFunction: Derivative of the rational function.
         """
-        
+
         diff_poly = self._poly.deriv(m)
         diff_terms = [term.deriv(m) for term in self._terms]
-        
+
         return RationalFunction(diff_terms, diff_poly)
 
     def __call__(self, x: ArrayLike) -> ArrayLike:
@@ -333,8 +301,8 @@ class RationalFunction:
     @classmethod
     def from_fraction(
         cls,
-        numerator: Polynomial,
-        denominator: Polynomial,
+        numerator: Polynomial | ArrayLike,
+        denominator: Polynomial | ArrayLike,
         atol: float = 0.0,
         rtol: float = 0.0,
         imtol: float = 0.0,
@@ -350,8 +318,8 @@ class RationalFunction:
             RationalFunction from its terms whenever possible.
 
         Args:
-            numerator (Polynomial): Numerator polynomial.
-            denominator (Polynomial): Denominator polynomial.
+            numerator (Polynomial | ArrayLike): Numerator polynomial, or series of coefficients in increasing order.
+            denominator (Polynomial | ArrayLike): Denominator polynomial, or series of coefficients in increasing order.
             atol (float, optional): Absolute tolerance for root equivalence. Defaults to 0.
             rtol (float, optional): Relative tolerance for root equivalence. Defaults to 0.
             imtol (float, optional): Tolerance for imaginary part of roots to be considered
@@ -360,6 +328,10 @@ class RationalFunction:
         Returns:
             RationalFunction: Rational function object.
         """
+        
+        # Cast to polynomial
+        numerator = as_polynomial(numerator)
+        denominator = as_polynomial(denominator)
 
         # Make denominator monic
         c = denominator.coef[-1]
@@ -382,10 +354,10 @@ class RationalFunction:
         )
 
         return cls(rterms, poly_quot)
-    
+
     @classmethod
     def from_poles(
-        cls, 
+        cls,
         numerator: Polynomial,
         poles: list[PolynomialRoot],
     ) -> None:
@@ -394,9 +366,9 @@ class RationalFunction:
         and numerically stable than using the from_fraction
         method, especially for high degree or ill-conditioned
         denominators.
-        
+
         Note:
-            The numerator polynomial should be scaled for a 
+            The numerator polynomial should be scaled for a
             denominator polynomial with leading coefficient 1.
 
         Args:
@@ -406,14 +378,27 @@ class RationalFunction:
         Returns:
             RationalFunction: Rational function object.
         """
-        
+
         lcm = RootLCM(poles)
         denominator = lcm.polynomial
-        poly = numerator//denominator
+        poly = numerator // denominator
         poly_rem = numerator % denominator
         rterms = partial_frac_decomposition(
             poly_rem.coef,
             poles,
         )
         return cls(rterms, poly)
+
+    def __array__(self) -> None:
+        # This method is necessary to avoid 
+        # the Polynomial __add__ and __mul__ methods
+        # being called when adding or multiplying
+        # Polynomial with RationalFunctions.
         
+        # It works by raising an error in the 
+        # polyutils.as_series function,        
+        # which is a necessary step in all
+        # the Polynomial operations.
+        raise RuntimeError(
+            "Cannot convert RationalFunction to array. Use __call__ instead."
+        )

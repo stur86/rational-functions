@@ -32,7 +32,7 @@ dev = [
 ]
 
 [tool.taskipy.tasks]
-test = { cmd = "pytest src/tests -v", help = "Run all unit tests" }
+test = { cmd = "pytest src/tests -v --cov=src/rational_functions --cov-report html", help = "Run all unit tests" }
 lint = { cmd = "ruff check src/rational_functions --fix", help = "Lint the project" }
 format = { cmd = "black src", help = "Format the code" }
 build-docs = { cmd = "mkdocs build", help = "Build the documentation" }

@@ -255,3 +255,4 @@ def test_rfunc_deriv(rf: RationalFunction, m: int) -> None:
     # Exclude edges from comparison, and use a relaxed tolerance
     # due to flaws in the numerical derivative
     assert np.allclose(y0[m:-m], y1[m:-m], rtol=5e-3)
+    
