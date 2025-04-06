@@ -222,6 +222,23 @@ def test_rfunc_scalar_mul(rf: RationalFunction, s: complex) -> None:
     y2 = m2(x)
     assert np.allclose(y0, y1)
     assert np.allclose(y0, y2)
+    
+@pytest.mark.parametrize(
+    "rf",
+    _test_ratfuncs,
+)
+def test_rfunc_recip(rf: RationalFunction) -> None:
+    """Test inverse of a rational function."""
+    x = np.linspace(-1, 1, 50)
+    
+    recip = rf.reciprocal()
+        
+    assert isinstance(recip, RationalFunction)
+    
+    y0 = 1.0/rf(x)
+    y1 = recip(x)
+    
+    assert np.allclose(y1, y0)
 
 @pytest.mark.parametrize(
     "rf,m",

@@ -23,9 +23,20 @@ def _get_callercode_safe(depth: int) -> FrameType | None:
 
 
 class RationalFunction:
-    """Rational function represented by
+    r"""Rational function represented by
     sum of terms with a single pole for the proper part,
     plus a residual polynomial for the improper part.
+    
+    The rational function, given a polynomial 
+    $p(x)$ and a list of terms with roots $r_i$, coefficients $c_i$
+    and order $k_i$, is defined as:
+    
+    $$
+    R(x) = p(x)+\sum_{i=1}^n \frac{c_i}{(x - r_i)^{k_i}}
+    $$
+        
+        
+    
     """
 
     _poly: Polynomial
@@ -33,8 +44,8 @@ class RationalFunction:
     _lcm: RootLCM
 
     def __init__(self, terms: list[RationalTerm], poly: Polynomial | None = None):
-        """Initialize the rational function.
-
+        """Initialize the rational function. 
+        
         Args:
             terms (list[RationalTerm]): List of terms.
             poly (Polynomial, optional): Residual polynomial. Defaults to None.
@@ -239,8 +250,59 @@ class RationalFunction:
 
         return self * other
     
+    def __truediv__(self, other: _RFuncOpCompatibleType) -> "RationalFunction":
+        """Divide two rational functions.
+
+        Args:
+            other (RationalFunction): Other rational function to divide.
+
+        Returns:
+            RationalFunction: Resulting rational function.
+        """
+        if isinstance(other, RationalFunction):
+            return self * other.reciprocal()
+        elif isinstance(other, Polynomial):
+            numerator = self.numerator
+            denominator = self.denominator*other
+            return RationalFunction.from_fraction(
+                numerator,
+                denominator,
+            )
+        elif np.isscalar(other):
+            # Divide each term by the scalar
+            new_poly = self._poly / other
+            new_terms = map(lambda t: RationalTerm(t.root, t.coef / other), self._terms)
+            return RationalFunction(list(new_terms), new_poly)
+
+        return NotImplemented
+        
+    def reciprocal(self) -> "RationalFunction":
+        r"""Get the reciprocal of the rational function.
+        
+        $$
+        R(x) = \frac{P(x)}{Q(x)} \implies R^{-1}(x) = \frac{Q(x)}{P(x)}
+        $$
+        
+        Returns:
+            RationalFunction: Inverse of the rational function.
+        """
+        numerator = self.denominator
+        denominator = self.numerator+self._poly*numerator
+        
+        return RationalFunction.from_fraction(
+            numerator,
+            denominator,
+        )
+    
     def deriv(self, m: int = 1) -> "RationalFunction":
-        """Differentiate the rational function.
+        r"""Differentiate the rational function in x.
+        
+        $$
+        \begin{align*}
+            \frac{d^m R(x)}{dx^m} &= \frac{d^{m-1}R'(x)}{dx^{m-1}} = \\
+            &= \frac{d^{m-1}}{dx^{m-1}} \frac{P'(x)Q(x)-P(x)Q'(x)}{Q^2(x)}
+        \end{align*}
+        $$
 
         Args:
             m (int, optional): Order of the derivative. Defaults to 1.
@@ -299,14 +361,15 @@ class RationalFunction:
             RationalFunction: Rational function object.
         """
 
-        # Polynomial part
-        poly_quot = numerator // denominator
-        # Residual numerator
-        poly_rem = numerator % denominator
         # Make denominator monic
         c = denominator.coef[-1]
         denominator /= c
         numerator /= c
+
+        # Polynomial part
+        poly_quot = numerator // denominator
+        # Residual numerator
+        poly_rem = numerator % denominator
 
         # Find roots
         if denominator.degree() == 0:
@@ -319,3 +382,38 @@ class RationalFunction:
         )
 
         return cls(rterms, poly_quot)
+    
+    @classmethod
+    def from_poles(
+        cls, 
+        numerator: Polynomial,
+        poles: list[PolynomialRoot],
+    ) -> None:
+        """Construct a RationalFunction from a list of poles
+        and a numerator polynomial. This method is more efficient
+        and numerically stable than using the from_fraction
+        method, especially for high degree or ill-conditioned
+        denominators.
+        
+        Note:
+            The numerator polynomial should be scaled for a 
+            denominator polynomial with leading coefficient 1.
+
+        Args:
+            numerator (Polynomial): Numerator polynomial.
+            poles (list[PolynomialRoot]): Poles of the rational function.
+
+        Returns:
+            RationalFunction: Rational function object.
+        """
+        
+        lcm = RootLCM(poles)
+        denominator = lcm.polynomial
+        poly = numerator//denominator
+        poly_rem = numerator % denominator
+        rterms = partial_frac_decomposition(
+            poly_rem.coef,
+            poles,
+        )
+        return cls(rterms, poly)
+        

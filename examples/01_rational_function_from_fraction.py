@@ -66,4 +66,3 @@ for root in roots_hi:
     last_pl = ax.axvline(root, color="r", lw=1, label="Poles")
 
 ax.legend(handles=[*l1, *l2, last_pl])
-# %%
