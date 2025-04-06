@@ -4,7 +4,7 @@ from typing import TypeVar
 from itertools import chain, product
 from numpy.polynomial import Polynomial
 from rational_functions import RationalFunction
-from rational_functions.terms import RationalTerm, PolynomialRoot
+from rational_functions.terms import RationalTerm
 
 
 T = TypeVar("T")
@@ -25,18 +25,12 @@ def self_product_w_o_duplicates(a: list[T]) -> list[tuple[T, T]]:
     return prod
 
 _test_terms = {
-    "r_s": RationalTerm(PolynomialRoot(3.0, 1), 2.0),  # Real root, real coefficient
-    "r_m": RationalTerm(
-        PolynomialRoot(3.0, 2), 2.0
-    ),  # Real root, real coefficient with multiplicity
-    "c_s": RationalTerm(PolynomialRoot(3.0 + 1.0j, 1), 2.0),  # Complex root, real coefficient
-    "c_m": RationalTerm(
-        PolynomialRoot(3.0 + 1.0j, 2), 2.0
-    ),  # Complex root, real coefficient with multiplicity
-    "c*_s": RationalTerm(PolynomialRoot(3.0 - 1.0j, 1), -2.0),  # Complex conjugate root, real coefficient
-    "c*_m": RationalTerm(
-        PolynomialRoot(3.0 - 1.0j, 2), -2.0
-    ),  # Complex conjugate root, real coefficient with multiplicity
+    "r_s": RationalTerm(3.0, 2.0),  # Real root, real coefficient
+    "r_m": RationalTerm(3.0, 2.0, 2),  # Real root, real coefficient with multiplicity
+    "c_s": RationalTerm(3.0 + 1.0j, 2.0),  # Complex root, real coefficient
+    "c_m": RationalTerm(3.0 + 1.0j, 2.0, 2), # Complex root, real coefficient with multiplicity
+    "c*_s": RationalTerm(3.0 - 1.0j, -2.0),  # Complex conjugate root, real coefficient
+    "c*_m": RationalTerm(3.0 - 1.0j, -2.0, 2)  # Complex conjugate root, real coefficient with multiplicity
 }
 
 _test_ratfuncs = chain(

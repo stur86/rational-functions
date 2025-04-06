@@ -79,6 +79,11 @@ class RationalTerm:
     def order(self) -> int:
         """Return the order of the term."""
         return self._k
+    
+    @property
+    def denominator_root(self) -> PolynomialRoot:
+        """Return the root of the denominator."""
+        return PolynomialRoot(self._r, self._k)
 
     @property
     def denominator(self) -> Polynomial:

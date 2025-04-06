@@ -1,7 +1,7 @@
 # %%
 import numpy as np
 from numpy.polynomial import Polynomial
-from rational_functions import RationalFunction, RationalTerm, PolynomialRoot
+from rational_functions import RationalFunction, RationalTerm
 import matplotlib.pyplot as plt
 
 # %%
@@ -37,7 +37,7 @@ coefs_hi = np.random.normal(size=deg)
 roots_hi = 10 ** (3 * rng.random(deg))
 
 ratfunc_hi = RationalFunction(
-    [RationalTerm(PolynomialRoot(r), c) for (c, r) in zip(coefs_hi, roots_hi)]
+    [RationalTerm(r, c) for (c, r) in zip(coefs_hi, roots_hi)]
 )
 
 numerator_hi = ratfunc_hi.numerator

@@ -3,14 +3,13 @@ import pytest
 from numpy.polynomial import Polynomial
 from rational_functions import RationalFunction
 from rational_functions.terms import RationalTerm
-from rational_functions.roots import PolynomialRoot
 
 
 @pytest.mark.parametrize(
     "terms,poly",
     [
         (
-            [RationalTerm(PolynomialRoot(3.0), 1.0)],
+            [RationalTerm(3.0, 1.0)],
             None
         ),
         (
@@ -18,7 +17,7 @@ from rational_functions.roots import PolynomialRoot
             Polynomial([1.0, 2.0])
         ),
         (
-            [RationalTerm(PolynomialRoot(2.0+1.0j), 1.0), RationalTerm(PolynomialRoot(2.0-1.0j), 1.0)],
+            [RationalTerm(2.0+1.0j, 1.0), RationalTerm(2.0-1.0j, 1.0)],
             Polynomial([1.0, 2.0])
         )
     ]
