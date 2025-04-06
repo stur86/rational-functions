@@ -13,47 +13,77 @@ RationalIntegralGeneralTerm = Union["RationalIntegralTermBase", "RationalTerm"]
 
 class RationalTerm:
     """A single term in a proper rational function,
-    corresponding to a single real or complex pole r of multiplicity k in the
+    corresponding to a single real or complex pole r of order k in the
     denominator, taking the form
 
     $$
-    R(x) = \\frac{a}{(x-r)^k}
+    R(x) = \\frac{c}{(x-r)^k}
     $$
 
     """
 
-    _root: PolynomialRoot
-    _coef: complex
+    _r: complex
+    _c: complex
+    _k: int
 
-    def __init__(self, root: PolynomialRoot, coef: complex):
+    def __init__(self, pole: complex, coef: complex, order: int = 1):
         """Create a new RationalTermSingle instance.
 
         Args:
-            root (PolynomialRoot): Polynomial root for the denominator
+            pole (complex): Value of the pole for the denominator
             coef (complex): Coefficient for the numerator
+            order (int): Order of the term
+                Defaults to 1.
+                
+        Raises:
+            ValueError: If the order is less than 1.
         """
+        
+        if order < 1:
+            raise ValueError("Order must be greater than or equal to 1")
 
-        self._root = root
-        self._coef = coef
+        self._r = pole
+        self._c = coef
+        self._k = order
+        
 
     def __neg__(self) -> "RationalTerm":
         """Negate the term."""
-        return self.__class__(self._root, -self._coef)
+        return self.__class__(self._r, -self._c, self._k)
+    
+    def __eq__(self, other: object) -> bool:
+        """Check if two terms are equal."""
+        if not isinstance(other, RationalTerm):
+            return False
+        return (
+            self._r == other._r
+            and self._c == other._c
+            and self._k == other._k
+        )
+        
+    def __hash__(self) -> int:
+        """Hash the term."""
+        return hash((self._r, self._c, self._k))
 
     @property
-    def root(self) -> PolynomialRoot:
-        """Return the root of the term."""
-        return self._root
+    def pole(self) -> complex:
+        """Return the pole of the term."""
+        return self._r
 
     @property
     def coef(self) -> complex:
         """Return the coefficient of the term."""
-        return self._coef
+        return self._c
+    
+    @property
+    def order(self) -> int:
+        """Return the order of the term."""
+        return self._k
 
     @property
     def denominator(self) -> Polynomial:
         """Return the denominator of the term."""
-        return self._root.monic_polynomial()
+        return Polynomial([-self._r, 1.0])**self._k
 
     @staticmethod
     def product(term1: "RationalTerm", term2: "RationalTerm") -> list["RationalTerm"]:
@@ -68,18 +98,19 @@ class RationalTerm:
             list[RationalTerm]: List of terms in the product
         """
 
-        r1 = term1._root
-        r2 = term2._root
+        r1 = term1._r
+        r2 = term2._r
 
-        if r1.is_equivalent(r2):
+        if r1 == r2:
             return [
                 RationalTerm(
-                    r1.with_multiplicity(r1.multiplicity + r2.multiplicity),
-                    term1._coef * term2._coef,
+                    r1,
+                    term1._c * term2._c,
+                    order=term1._k + term2._k,
                 )
             ]
 
-        roots = [r1, r2]
+        roots = [PolynomialRoot(r1, term1._k), PolynomialRoot(r2, term2._k)]
         return partial_frac_decomposition([term1.coef * term2.coef], roots)
 
     @staticmethod
@@ -98,20 +129,20 @@ class RationalTerm:
             tuple[list[RationalTerm], Polynomial]: List of terms in the product and the remaining polynomial
         """
 
-        num = poly * term._coef
-        r = term._root
+        num = poly * term._c
 
-        den = r.monic_polynomial()
+        den = term.denominator
         poly_out = num // den
         poly_rem = num % den
 
-        terms = partial_frac_decomposition(poly_rem.coef, [r])
+        terms = partial_frac_decomposition(poly_rem.coef, [PolynomialRoot(term.pole, term.order)])
 
         return terms, poly_out
 
     @staticmethod
     def simplify(terms: list["RationalTerm"]) -> list["RationalTerm"]:
-        """Simplify a list of RationalTerms by combining terms with the same root.
+        """Simplify a list of RationalTerms by combining terms with the same pole
+        and order.
 
         Args:
             terms (list[RationalTerm]): List of RationalTerms to simplify
@@ -120,17 +151,18 @@ class RationalTerm:
             list[RationalTerm]: Simplified list of RationalTerms
         """
 
-        simplified_terms: dict[PolynomialRoot, complex] = {}
+        simplified_terms: dict[tuple[complex, int], complex] = {}
         for term in terms:
-            if term.root in simplified_terms:
-                simplified_terms[term.root] += term.coef
+            key = (term.pole, term.order)
+            if key in simplified_terms:
+                simplified_terms[key] += term.coef
             else:
-                simplified_terms[term.root] = term.coef
+                simplified_terms[key] = term.coef
 
         return list([
-            RationalTerm(root, coef)
-            for root, coef in simplified_terms.items()
-            if coef != 0.0
+            RationalTerm(r, c, k)
+            for (r, k), c in simplified_terms.items()
+            if c != 0.0
         ])
 
     def __call__(self, x: ArrayLike) -> ArrayLike:
@@ -143,9 +175,8 @@ class RationalTerm:
             ArrayLike: evaluated values
         """
 
-        r = self._root
-        den = x - r.value
-        return self._coef / den**r.multiplicity
+        den = x - self.pole
+        return self._c / den**self.order
 
     def deriv(self, m: int = 1) -> "RationalTerm":
         """Compute the derivative of the term.
@@ -160,33 +191,29 @@ class RationalTerm:
         
         assert m >= 1, "Derivative order must be greater than or equal to 1"
 
-        r = self._root
-        r_d = PolynomialRoot(value=r.value, multiplicity=r.multiplicity + m)
-        a = self._coef * np.prod(r.multiplicity+np.arange(m))*(-1)**m
-        return RationalTerm(r_d, a)
+        c = self._c *np.prod(self.order+np.arange(m))*(-1)**m                
+        return RationalTerm(self.pole, c, self.order+m)
 
-    def integ(self) -> tuple[RationalIntegralGeneralTerm]:
+    def integ(self) -> RationalIntegralGeneralTerm:
         """Compute the integral of the term.
 
         Returns:
-            tuple[RationalIntegralGeneralTerm]: Terms of the integral
+            RationalIntegralGeneralTerm: Integral
         """
 
-        r = self._root
-        if r.multiplicity == 1:
-            return (RationalIntegralLogTerm(self._coef, r.value),)
+        if self.order == 1:
+            return RationalIntegralLogTerm(self._c, self.pole)
         else:
-            r_i = r.with_multiplicity(r.multiplicity - 1)
-            a = -self._coef / r_i.multiplicity
-            return (RationalTerm(r_i, a),)
+            c = -self._c / (self.order-1)
+            return RationalTerm(self.pole, c, self.order - 1)
 
     def __str__(self) -> str:
         """Print the term."""
-        num = self._coef
-        den = Polynomial([-self._root.value, 1.0])
+        num = self._c
+        den = Polynomial([-self.pole, 1.0])
         mul_str = ""
-        if self._root.multiplicity > 1:
-            mul_str = str(self._root.multiplicity).translate(
+        if self.order > 1:
+            mul_str = str(self.order).translate(
                 Polynomial._superscript_mapping
             )
 

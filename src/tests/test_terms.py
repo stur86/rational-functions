@@ -1,7 +1,6 @@
 import numpy as np
 from numpy.polynomial import Polynomial
 import pytest
-from rational_functions.roots import PolynomialRoot
 from rational_functions.terms import (
     RationalTerm,
     RationalIntegralArctanTerm,
@@ -43,42 +42,49 @@ def test_log_pair_term():
     assert np.allclose(logpt(x), 0.5 * a * np.log((x - r_r) ** 2 + r_i**2))
 
 
-@pytest.mark.parametrize(
-    "root",
-    [
-        PolynomialRoot(value=3.0, multiplicity=1),
-        PolynomialRoot(value=3.0, multiplicity=2),
-        PolynomialRoot(value=3.0 + 1.0j, multiplicity=1),
-        PolynomialRoot(value=3.0 + 1.0j, multiplicity=2),
-    ],
-)
-def test_rational_term_num_den(root: PolynomialRoot):
-    term = RationalTerm(root, 1.0)
+def test_rational_term_invalid() -> None:
+    with pytest.raises(ValueError):
+        RationalTerm(1, 1, -1)
 
-    assert term.coef == 1.0
-    assert (
-        term.denominator
-        == np.polynomial.Polynomial([-root.value, 1.0]) ** root.multiplicity
-    )
+    with pytest.raises(ValueError):
+        RationalTerm(1, 1, 0)
 
 
 @pytest.mark.parametrize(
-    "root,a",
+    "pole,coef,order",
     [
-        (PolynomialRoot(value=3.0), 1.0),
-        (PolynomialRoot(value=3.0, multiplicity=2), -1.0),
-        (PolynomialRoot(value=3.0, multiplicity=3), -1.0),
-        (PolynomialRoot(value=3.0 + 1.0j), 1.0),
-        (PolynomialRoot(value=3.0 + 1.0j, multiplicity=2), -1.0),
-        (PolynomialRoot(value=3.0 - 1.0j), 1.0+0.5j),
-        (PolynomialRoot(value=3.0 - 1.0j, multiplicity=3), -1.0+0.5j),
+        (3.0, 1.0, 1),
+        (3.0, 1.0, 2),
+        (3.0 + 1.0j, 2.5, 1),
+        (3.0 + 1.0j, 2.5, 2),
+        (3.0 - 1.0j, 2.5j, 1),
+        (3.0 - 1.0j, 2.5j, 2),
     ],
 )
-def test_rational_term_eval(root: PolynomialRoot, a: complex):
-    pterm = RationalTerm(root, a)
+def test_rational_term_num_den(pole: complex, coef: complex, order: int) -> None:
+    term = RationalTerm(pole, coef, order)
+
+    assert term.coef == coef
+    assert term.denominator == np.polynomial.Polynomial([-pole, 1.0]) ** order
+
+
+@pytest.mark.parametrize(
+    "pole,coef,order",
+    [
+        (3.0, 1.0, 1),
+        (3.0, -1.0, 2),
+        (3.0, -1.0, 3),
+        (3.0 + 1.0j, 1.0, 1),
+        (3.0 + 1.0j, -1.0, 2),
+        (3.0 - 1.0j, 1.0 + 0.5j, 1),
+        (3.0 - 1.0j, -1.0 + 0.5j, 3),
+    ],
+)
+def test_rational_term_eval(pole: complex, coef: complex, order: int) -> None:
+    pterm = RationalTerm(pole, coef, order)
 
     x = np.linspace(-1, 1, 10000)
-    y = a / (x - root.value) ** root.multiplicity
+    y = coef / (x - pole) ** order
 
     assert np.allclose(pterm(x), y)
 
@@ -93,7 +99,7 @@ def test_rational_term_eval(root: PolynomialRoot, a: complex):
 
     int_y = np.cumsum(y) * (x[1] - x[0])
     pterm_int = pterm.integ()
-    pint = np.sum([term(x) for term in pterm_int], axis=0)
+    pint = pterm_int(x)
 
     assert np.allclose(pint - pint[0], int_y - int_y[0], rtol=1e-3, atol=1e-3)
 
@@ -101,10 +107,10 @@ def test_rational_term_eval(root: PolynomialRoot, a: complex):
 @pytest.mark.parametrize(
     "rterm",
     [
-        RationalTerm(PolynomialRoot(value=3.0), 1.0),
-        RationalTerm(PolynomialRoot(value=3.0, multiplicity=2), -1.0),
-        RationalTerm(PolynomialRoot(value=3.0 + 1.0j), 1.0),
-        RationalTerm(PolynomialRoot(value=3.0 + 1.0j, multiplicity=2), -1.0),
+        RationalTerm(3.0, 1.0),
+        RationalTerm(3.0, -1.0, 2),
+        RationalTerm(3.0 + 1.0j, 1.0),
+        RationalTerm(3.0 + 1.0j, -1.0, 2),
     ],
 )
 def test_rational_term_str(rterm: RationalTerm, snapshot: Snapshot) -> None:
@@ -118,18 +124,16 @@ def test_rational_term_str(rterm: RationalTerm, snapshot: Snapshot) -> None:
     "rterm1,rterm2",
     [
         (
-            RationalTerm(PolynomialRoot(value=3.0), 1.0),
-            RationalTerm(PolynomialRoot(value=4.0), -1.0),
+            RationalTerm(3.0, 1.0),
+            RationalTerm(4.0, -1.0),
         ),
         (
-            RationalTerm(PolynomialRoot(value=3.0), 1.0),
-            RationalTerm(
-                PolynomialRoot(value=2.0 + 1.0j), -1.0
-            ),
+            RationalTerm(3.0, 1.0),
+            RationalTerm(2.0 + 1.0j, -1.0),
         ),
         (
-            RationalTerm(PolynomialRoot(value=3.0), 2.0),
-            RationalTerm(PolynomialRoot(value=3.0, multiplicity=2), -1.0+2.0j),
+            RationalTerm(3.0, 2.0),
+            RationalTerm(3.0, -1.0 + 2.0j, 2),
         ),
     ],
 )
@@ -150,14 +154,14 @@ def test_rational_term_product(rterm1: RationalTerm, rterm2: RationalTerm) -> No
 @pytest.mark.parametrize(
     "rterm,poly",
     [
-        (RationalTerm(PolynomialRoot(value=3.0), 1.0), Polynomial([1.0, 2.0])),
+        (RationalTerm(3.0, 1.0), Polynomial([1.0, 2.0])),
         (
-            RationalTerm(PolynomialRoot(value=3.0, multiplicity=3), 1.0),
+            RationalTerm(3.0, 1.0, 3),
             Polynomial([1.0, 2.0, 3.0]),
         ),
-        (RationalTerm(PolynomialRoot(value=3.0), 1.0), Polynomial([-1.0])),
+        (RationalTerm(3.0, 1.0), Polynomial([-1.0])),
         (
-            RationalTerm(PolynomialRoot(value=3.0 + 1.0j), 1.0),
+            RationalTerm(3.0 + 1.0j, 1.0),
             Polynomial([-1.0, 2.0]),
         ),
     ],
@@ -180,9 +184,7 @@ def test_rational_term_polynomial_product(
 
 def test_rational_term_neg() -> None:
 
-    rterm = RationalTerm(
-        PolynomialRoot(value=3.0 + 1.0j), 1.0
-    )
+    rterm = RationalTerm(3.0 + 1.0j, 1.0)
 
     x = np.linspace(-1, 1, 50)
     y1 = rterm(x) * (-1)
@@ -190,21 +192,25 @@ def test_rational_term_neg() -> None:
 
     assert np.allclose(y1, y2)
     assert isinstance((-rterm), rterm.__class__)
-    assert (-rterm).root == rterm.root
+    assert (-rterm).pole == rterm.pole
+    assert (-rterm).order == rterm.order
+
 
 def test_simplify() -> None:
     """Test the simplify method of the RationalTerm class."""
-    rterm1 = RationalTerm(PolynomialRoot(value=3.0), 1.0)
-    rterm2 = RationalTerm(PolynomialRoot(value=3.0), 2.0)
-    rterm3 = RationalTerm(PolynomialRoot(value=4.0), -1.0)
+    rterm1 = RationalTerm(3.0, 1.0)
+    rterm2 = RationalTerm(3.0, 2.0)
+    rterm3 = RationalTerm(4.0, -1.0)
 
     terms = [rterm1, rterm2, rterm3]
     simplified_terms = RationalTerm.simplify(terms)
     # Sort them to ensure the order is consistent
-    simplified_terms.sort(key=lambda x: x.root.value)
+    simplified_terms.sort(key=lambda x: x.pole)
     # Check that the simplified terms are correct
     assert len(simplified_terms) == 2
-    assert simplified_terms[0].root == rterm1.root
-    assert simplified_terms[1].root == rterm3.root
+    assert simplified_terms[0].pole == rterm1.pole
+    assert simplified_terms[0].order == rterm2.order
+    assert simplified_terms[1].pole == rterm3.pole
+    assert simplified_terms[1].order == rterm3.order
     assert np.isclose(simplified_terms[0].coef, 3.0)
     assert np.isclose(simplified_terms[1].coef, -1.0)

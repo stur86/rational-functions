@@ -117,6 +117,6 @@ def partial_frac_decomposition(
         for i in range(r.multiplicity):
             coef = x[m_i]
             m_i += 1
-            terms.append(RationalTerm(r.with_multiplicity(i + 1), coef))
+            terms.append(RationalTerm(r.value, coef, i+1))
 
     return terms

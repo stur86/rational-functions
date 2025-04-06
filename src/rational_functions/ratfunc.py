@@ -52,7 +52,7 @@ class RationalFunction:
         """
 
         self._terms = RationalTerm.simplify(terms)
-        self._lcm = RootLCM([term.root for term in self._terms])
+        self._lcm = RootLCM([term.pole for term in self._terms])
         self._poly = poly if poly is not None else Polynomial([0.0])
         self._poly = self._poly.trim()
 
@@ -76,7 +76,7 @@ class RationalFunction:
         num = Polynomial([0.0])
         for term in self._terms:
             num += term.coef * self._lcm.residual(
-                term.root.value, term.root.multiplicity
+                term.pole.value, term.pole.multiplicity
             )
 
         return num
@@ -271,7 +271,7 @@ class RationalFunction:
         elif np.isscalar(other):
             # Divide each term by the scalar
             new_poly = self._poly / other
-            new_terms = map(lambda t: RationalTerm(t.root, t.coef / other), self._terms)
+            new_terms = map(lambda t: RationalTerm(t.pole, t.coef / other), self._terms)
             return RationalFunction(list(new_terms), new_poly)
 
         return NotImplemented
