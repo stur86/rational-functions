@@ -61,7 +61,7 @@ _test_ratfuncs = list(_test_ratfuncs)
 _test_ratfunc_pairs = self_product_w_o_duplicates(_test_ratfuncs)
 
 _test_polynomials = [Polynomial([1.0]), Polynomial([2.0, 3.0]), Polynomial([3.0, 4.0, 5.0])]
-_test_scalars = [1.0, 2.0, -1.0, -0.35, 2.2j, 3.0+1,0j]
+_test_scalars = [1.0, 2.0, -1.0, -0.35, 2.2j, 3.0+1.0j]
 
 @pytest.mark.parametrize(
     "rf",
@@ -235,6 +235,57 @@ def test_rfunc_recip(rf: RationalFunction) -> None:
     assert np.allclose(y1, y0)
 
 @pytest.mark.parametrize(
+    "rf_l, rf_r",
+    _test_ratfunc_pairs
+)
+def test_rfunc_div(rf_l: RationalFunction, rf_r: RationalFunction) -> None:
+    """Test division of two rational functions."""
+    x = np.linspace(-1, 1, 50)
+        
+    div = rf_l/rf_r
+    
+    assert isinstance(div, RationalFunction)
+    
+    y0 = rf_l(x)/rf_r(x)
+    y1 = div(x)
+        
+    assert np.allclose(y1, y0)
+
+@pytest.mark.parametrize(
+    "rf,p",
+    list(product(_test_ratfuncs, _test_polynomials)),
+)
+def test_rfunc_poly_div(rf: RationalFunction, p: Polynomial) -> None:
+    """Test division of a rational function by a polynomial."""
+    x = np.linspace(-1, 1, 50)
+    
+    div = rf/p
+    
+    assert isinstance(div, RationalFunction)
+    
+    y0 = rf(x)/p(x)
+    y1 = div(x)
+            
+    assert np.allclose(y1, y0)
+
+@pytest.mark.parametrize(
+    "rf,s",
+    list(product(_test_ratfuncs, _test_scalars)),
+)
+def test_rfunc_scalar_div(rf: RationalFunction, s: complex) -> None:
+    """Test division of a rational function by a scalar."""
+    x = np.linspace(-1, 1, 50)
+    
+    div = rf/s
+    
+    assert isinstance(div, RationalFunction)
+    
+    y0 = rf(x)/s
+    y1 = div(x)
+            
+    assert np.allclose(y1, y0)
+
+@pytest.mark.parametrize(
     "rf,m",
     product(_test_ratfuncs, [1, 2, 3])
 )
@@ -255,4 +306,3 @@ def test_rfunc_deriv(rf: RationalFunction, m: int) -> None:
     # Exclude edges from comparison, and use a relaxed tolerance
     # due to flaws in the numerical derivative
     assert np.allclose(y0[m:-m], y1[m:-m], rtol=5e-3)
-    

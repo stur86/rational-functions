@@ -8,6 +8,7 @@ from rational_functions.decomp import catalogue_roots, partial_frac_decompositio
 from rational_functions.roots import PolynomialRoot
 from rational_functions.lcm import RootLCM
 from rational_functions.utils import as_polynomial
+from dataclasses import dataclass
 
 _RFuncOpCompatibleType = Union["RationalFunction", Polynomial, np.number]
 
@@ -25,13 +26,20 @@ class RationalFunction:
     R(x) = p(x)+\sum_{i=1}^n \frac{c_i}{(x - r_i)^{k_i}}
     $$
 
-
-
     """
 
     _poly: Polynomial
     _terms: list[RationalTerm]
     _lcm: RootLCM
+
+    # Approximation options
+    @dataclass
+    class ApproximationOptions:
+        atol: float = 0.0
+        rtol: float = 0.0
+        imtol: float = 0.0
+
+    __approx_opts: ApproximationOptions = ApproximationOptions()
 
     def __init__(self, terms: list[RationalTerm], poly: Polynomial | None = None):
         """Initialize the rational function.
@@ -228,19 +236,29 @@ class RationalFunction:
             RationalFunction: Resulting rational function.
         """
         if isinstance(other, RationalFunction):
-            return self * other.reciprocal()
-        elif isinstance(other, Polynomial):
-            numerator = self.numerator
-            denominator = self.denominator * other
+            # Find extended numerator for both
+            ext_numerator = self.numerator + self._poly*self.denominator
+            other_ext_numerator = other.numerator + other._poly*other.denominator
+            numerator = ext_numerator * other.denominator
+            denominator = other_ext_numerator * self.denominator
             return RationalFunction.from_fraction(
                 numerator,
                 denominator,
             )
+        elif isinstance(other, Polynomial):
+            # We must divide by the highest order coefficience since the 
+            # denominator will always be monic
+            numerator = (self.numerator+self._poly*self.denominator)/other.coef[-1]
+            den_poles = self.poles + catalogue_roots(other, 
+                                                     atol=self.__approx_opts.atol,
+                                                     rtol=self.__approx_opts.rtol,
+                                                     imtol=self.__approx_opts.imtol)
+            return RationalFunction.from_poles(numerator, den_poles)
         elif np.isscalar(other):
             # Divide each term by the scalar
             new_poly = self._poly / other
-            new_terms = map(lambda t: RationalTerm(t.pole, t.coef / other), self._terms)
-            return RationalFunction(list(new_terms), new_poly)
+            new_terms = map(lambda t: RationalTerm(t.pole, t.coef / other, order=t.order), self._terms)
+            return RationalFunction(new_terms, new_poly)
 
         return NotImplemented
 
@@ -303,9 +321,9 @@ class RationalFunction:
         cls,
         numerator: Polynomial | ArrayLike,
         denominator: Polynomial | ArrayLike,
-        atol: float = 0.0,
-        rtol: float = 0.0,
-        imtol: float = 0.0,
+        atol: float | None = None,
+        rtol: float | None = None,
+        imtol: float | None = None,
     ) -> "RationalFunction":
         """Construct a RationalFunction from a fraction of two
         polynomials.
@@ -320,15 +338,15 @@ class RationalFunction:
         Args:
             numerator (Polynomial | ArrayLike): Numerator polynomial, or series of coefficients in increasing order.
             denominator (Polynomial | ArrayLike): Denominator polynomial, or series of coefficients in increasing order.
-            atol (float, optional): Absolute tolerance for root equivalence. Defaults to 0.
-            rtol (float, optional): Relative tolerance for root equivalence. Defaults to 0.
+            atol (float, optional): Absolute tolerance for root equivalence. Defaults to None (use global setting).
+            rtol (float, optional): Relative tolerance for root equivalence. Defaults to None (use global setting).
             imtol (float, optional): Tolerance for imaginary part of roots to be considered
-                zero. Defaults to 0.
+                zero. Defaults to None (use global setting).
 
         Returns:
             RationalFunction: Rational function object.
         """
-        
+
         # Cast to polynomial
         numerator = as_polynomial(numerator)
         denominator = as_polynomial(denominator)
@@ -337,6 +355,10 @@ class RationalFunction:
         c = denominator.coef[-1]
         denominator /= c
         numerator /= c
+
+        atol = atol if atol is not None else cls.__approx_opts.atol
+        rtol = rtol if rtol is not None else cls.__approx_opts.rtol
+        imtol = imtol if imtol is not None else cls.__approx_opts.imtol
 
         # Polynomial part
         poly_quot = numerator // denominator
@@ -390,15 +412,43 @@ class RationalFunction:
         return cls(rterms, poly)
 
     def __array__(self) -> None:
-        # This method is necessary to avoid 
+        # This method is necessary to avoid
         # the Polynomial __add__ and __mul__ methods
         # being called when adding or multiplying
         # Polynomial with RationalFunctions.
-        
-        # It works by raising an error in the 
-        # polyutils.as_series function,        
+
+        # It works by raising an error in the
+        # polyutils.as_series function,
         # which is a necessary step in all
         # the Polynomial operations.
         raise RuntimeError(
             "Cannot convert RationalFunction to array. Use __call__ instead."
         )
+
+    @classmethod
+    def set_approximation_options(
+        cls,
+        atol: float | None = None,
+        rtol: float | None = None,
+        imtol: float | None = None,
+    ) -> None:
+        """Set the approximation options for the rational function.
+        They control how the poles of a rational function are grouped
+        together and approximated. These are used as defaults in from_fraction,
+        and whenever they can't be set by the user directly like in division.
+
+        Any value that is not passed gets left to its pre-existing value.
+
+        Args:
+            atol (float | None, optional): Absolute tolerance to consider two poles identical. Defaults to None.
+            rtol (float | None, optional): Relative tolerance to consider two poles identical. Defaults to None.
+            imtol (float | None, optional): Tolerance on a non-zero imaginary part to approximate it as
+                zero. Defaults to None.
+        """
+
+        if atol is not None:
+            cls.__approx_opts.atol = atol
+        if rtol is not None:
+            cls.__approx_opts.rtol = rtol
+        if imtol is not None:
+            cls.__approx_opts.imtol = imtol
