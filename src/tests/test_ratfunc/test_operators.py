@@ -351,3 +351,9 @@ def test_rfunc_notimpl():
 
     with pytest.raises(TypeError):
         rf / None
+
+    with pytest.raises(TypeError):
+        rf**None
+
+    with pytest.raises(ValueError):
+        rf**3.5

@@ -296,8 +296,10 @@ class RationalFunction:
         Returns:
             RationalFunction: Resulting rational function.
         """
-        if not isinstance(exponent, int):
-            return NotImplemented
+        if not exponent % 1 == 0:
+            # Only integer powers are allowed
+            raise ValueError("Power must be an integer.")
+        exponent = int(exponent)
 
         if exponent == 0:
             return RationalFunction([], Polynomial([1.0]))
