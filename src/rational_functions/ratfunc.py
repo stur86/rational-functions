@@ -287,6 +287,28 @@ class RationalFunction:
 
         return NotImplemented
 
+    def __pow__(self, exponent: int) -> "RationalFunction":
+        """Raise the rational function to a power.
+
+        Args:
+            exponent (int): Exponent to raise the rational function to.
+
+        Returns:
+            RationalFunction: Resulting rational function.
+        """
+        if not isinstance(exponent, int):
+            return NotImplemented
+
+        if exponent == 0:
+            return RationalFunction([], Polynomial([1.0]))
+        elif exponent < 0:
+            return self.reciprocal() ** -exponent
+
+        ans = RationalFunction(self._terms, self._poly)
+        for _ in range(exponent - 1):
+            ans = ans * self
+        return ans
+
     def reciprocal(self) -> "RationalFunction":
         r"""Get the reciprocal of the rational function.
 

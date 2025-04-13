@@ -153,11 +153,18 @@ def test_rfunc_scalar_add(rf: RationalFunction, s: complex) -> None:
 def test_rfunc_sub(rf_l: RationalFunction, rf_r: RationalFunction) -> None:
     """Test subtraction of two rational functions."""
     x = np.linspace(-1, 1, 50)
+
+    s1 = rf_l - rf_r
+    s2 = rf_r - rf_l
+    assert isinstance(s1, RationalFunction)
+    assert isinstance(s2, RationalFunction)
+
     y1 = rf_l(x) - rf_r(x)
-    y2 = (rf_l - rf_r)(x)
+    y2 = s1(x)
+    y3 = s2(x)
 
     assert np.allclose(y1, y2)
-    assert isinstance((rf_l - rf_r), rf_l.__class__)
+    assert np.allclose(-y1, y3)
 
 
 @pytest.mark.parametrize("rf_l, rf_r", _test_ratfunc_pairs)
@@ -291,6 +298,23 @@ def test_rfunc_scalar_div(rf: RationalFunction, s: complex) -> None:
     assert np.allclose(y1, y0)
 
 
+@pytest.mark.parametrize(
+    "rf,m",
+    product(_test_ratfuncs, [-2, -1, 1, 2, 3]),
+)
+def test_rfunc_pow(rf: RationalFunction, m: int) -> None:
+    """Test power of a rational function."""
+    x = np.linspace(-1, 1, 50)
+
+    pow1 = rf**m
+    assert isinstance(pow1, RationalFunction)
+
+    y0 = rf(x) ** m
+    y1 = pow1(x)
+
+    assert np.allclose(y0, y1)
+
+
 @pytest.mark.parametrize("rf,m", product(_test_ratfuncs, [1, 2, 3]))
 def test_rfunc_deriv(rf: RationalFunction, m: int) -> None:
     """Test derivative of a rational function."""
@@ -309,3 +333,21 @@ def test_rfunc_deriv(rf: RationalFunction, m: int) -> None:
     # Exclude edges from comparison, and use a relaxed tolerance
     # due to flaws in the numerical derivative
     assert np.allclose(y0[m:-m], y1[m:-m], rtol=5e-3)
+
+
+def test_rfunc_notimpl():
+    # Test not implemented operations
+
+    rf = RationalFunction.from_fraction([1.0], [-1.0, 1.0])
+
+    with pytest.raises(TypeError):
+        rf + None
+
+    with pytest.raises(TypeError):
+        rf - None
+
+    with pytest.raises(TypeError):
+        rf * None
+
+    with pytest.raises(TypeError):
+        rf / None
