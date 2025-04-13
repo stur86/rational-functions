@@ -7,7 +7,7 @@ from rational_functions.terms import RationalTerm
 from rational_functions.decomp import catalogue_roots, partial_frac_decomposition
 from rational_functions.roots import PolynomialRoot
 from rational_functions.lcm import RootLCM
-from rational_functions.utils import as_polynomial
+from rational_functions.utils import as_polynomial, PolynomialDef
 from dataclasses import dataclass
 
 _RFuncOpCompatibleType = Union["RationalFunction", Polynomial, np.number]
@@ -41,7 +41,7 @@ class RationalFunction:
 
     __approx_opts: ApproximationOptions = ApproximationOptions()
 
-    def __init__(self, terms: list[RationalTerm], poly: Polynomial | None = None):
+    def __init__(self, terms: list[RationalTerm], poly: PolynomialDef | None = None):
         """Initialize the rational function.
 
         Args:
@@ -51,7 +51,7 @@ class RationalFunction:
 
         self._terms = RationalTerm.simplify(terms)
         self._lcm = RootLCM([term.denominator_root for term in self._terms])
-        self._poly = poly if poly is not None else Polynomial([0.0])
+        self._poly = as_polynomial(poly) if poly is not None else Polynomial([0.0])
         self._poly = self._poly.trim()
 
     @property
@@ -326,8 +326,8 @@ class RationalFunction:
     @classmethod
     def from_fraction(
         cls,
-        numerator: Polynomial | ArrayLike,
-        denominator: Polynomial | ArrayLike,
+        numerator: PolynomialDef,
+        denominator: PolynomialDef,
         atol: float | None = None,
         rtol: float | None = None,
         imtol: float | None = None,
@@ -387,7 +387,7 @@ class RationalFunction:
     @classmethod
     def from_poles(
         cls,
-        numerator: Polynomial,
+        numerator: PolynomialDef,
         poles: list[PolynomialRoot],
     ) -> None:
         """Construct a RationalFunction from a list of poles
@@ -407,6 +407,8 @@ class RationalFunction:
         Returns:
             RationalFunction: Rational function object.
         """
+
+        numerator = as_polynomial(numerator)
 
         lcm = RootLCM(poles)
         denominator = lcm.polynomial
