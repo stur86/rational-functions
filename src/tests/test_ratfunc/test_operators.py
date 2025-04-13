@@ -95,7 +95,7 @@ def test_rfunc_add(rf_l: RationalFunction, rf_r: RationalFunction) -> None:
 
     rf_s = rf_l + rf_r
 
-    assert isinstance(rf_s, rf_l.__class__)
+    assert isinstance(rf_s, RationalFunction)
 
     y1 = rf_l(x) + rf_r(x)
     y2 = (rf_l + rf_r)(x)

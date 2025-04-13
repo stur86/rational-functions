@@ -3,10 +3,12 @@
 from abc import ABC, abstractmethod
 from typing import Union
 import numpy as np
+from itertools import groupby
 from numpy.typing import ArrayLike
 from numpy.polynomial import Polynomial
 from .roots import PolynomialRoot
 from .decomp import partial_frac_decomposition
+from .utils import group_by_closeness
 
 RationalIntegralGeneralTerm = Union["RationalIntegralTermBase", "RationalTerm"]
 
@@ -142,24 +144,40 @@ class RationalTerm:
         return terms, poly_out
 
     @staticmethod
-    def simplify(terms: list["RationalTerm"]) -> list["RationalTerm"]:
+    def simplify(
+        terms: list["RationalTerm"], atol: float = 0.0, rtol: float = 0.0
+    ) -> list["RationalTerm"]:
         """Simplify a list of RationalTerms by combining terms with the same pole
-        and order.
+        and order. If tolerances are specified, terms can be grouped also
+        by closeness rather than exact equality.
 
         Args:
             terms (list[RationalTerm]): List of RationalTerms to simplify
+            atol (float): Absolute tolerance for closeness.
+                Defaults to 0.0.
+            rtol (float): Relative tolerance for closeness.
+                Defaults to 0.0.
 
         Returns:
             list[RationalTerm]: Simplified list of RationalTerms
         """
 
         simplified_terms: dict[tuple[complex, int], complex] = {}
-        for term in terms:
-            key = (term.pole, term.order)
-            if key in simplified_terms:
-                simplified_terms[key] += term.coef
-            else:
-                simplified_terms[key] = term.coef
+        # First, group by order
+        # Sorting is important for groupby to work
+        for order, group in groupby(
+            sorted(terms, key=lambda x: x.order),
+            key=lambda x: x.order,
+        ):
+            # Then, group by pole
+            grouped_terms = group_by_closeness(
+                list(group), key=lambda x: x.pole, atol=atol, rtol=rtol
+            )
+            for pole, pgroup in grouped_terms.items():
+                # Sum the coefficients of the terms with the same pole
+                coef = sum(term.coef for term in pgroup)
+                if not np.isclose(coef, 0.0, atol=atol, rtol=rtol):
+                    simplified_terms[(pole, order)] = coef
 
         return list(
             [

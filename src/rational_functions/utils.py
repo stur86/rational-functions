@@ -28,8 +28,8 @@ T = TypeVar("T")
 def group_by_closeness(
     data: Iterable[T],
     key: Callable[[T], complex] = lambda x: x,
-    atol: float = 1e-8,
-    rtol: float = 1e-5,
+    atol: float = 0.0,
+    rtol: float = 0.0,
 ) -> dict[complex, list[T]]:
     """Group elements by closeness of their keys. Keys must be numeric (float or complex).
 

@@ -20,7 +20,7 @@ def test_as_polynomial():
 def test_group_by_closeness():
     # Test a simple group
     data = [1, 3.00000002, 3, 2, 1.00000001]
-    grouped = group_by_closeness(data)
+    grouped = group_by_closeness(data, atol=1e-8, rtol=1e-5)
     assert len(grouped) == 3
 
     assert grouped == {
@@ -39,7 +39,7 @@ def test_group_by_closeness():
         ("f", 3),
         ("g", 3.00000002),
     ]
-    grouped = group_by_closeness(data, key=lambda x: x[1])
+    grouped = group_by_closeness(data, key=lambda x: x[1], atol=1e-8, rtol=1e-5)
 
     assert len(grouped) == 3
     assert grouped == {

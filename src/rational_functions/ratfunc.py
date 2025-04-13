@@ -49,7 +49,9 @@ class RationalFunction:
             poly (Polynomial, optional): Residual polynomial. Defaults to None.
         """
 
-        self._terms = RationalTerm.simplify(terms)
+        self._terms = RationalTerm.simplify(
+            terms, self.__approx_opts.atol, self.__approx_opts.rtol
+        )
         self._lcm = RootLCM([term.denominator_root for term in self._terms])
         self._poly = as_polynomial(poly) if poly is not None else Polynomial([0.0])
         self._poly = self._poly.trim()
@@ -120,7 +122,7 @@ class RationalFunction:
         else:
             return NotImplemented
 
-        sum_terms = RationalTerm.simplify(self._terms + other_terms)
+        sum_terms = self._terms + other_terms
 
         ans = RationalFunction(
             sum_terms,
@@ -322,6 +324,14 @@ class RationalFunction:
         t_y = np.sum([term(x) for term in self._terms], axis=0)
 
         return p_y + t_y
+
+    def __str__(self) -> str:
+        """String representation of the rational function.
+
+        Returns:
+            str: String representation.
+        """
+        return f"{self._poly} + ({self.numerator})/({self.denominator})"
 
     @classmethod
     def from_fraction(
