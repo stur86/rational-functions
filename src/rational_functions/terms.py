@@ -168,15 +168,14 @@ class RationalTerm:
             list[RationalTerm]: Simplified list of RationalTerms
         """
 
+        def round_to_real(pole: complex) -> complex:
+            if np.abs(pole.imag) < imtol:
+                # If the imaginary part is small enough, return the real part
+                return pole.real
+            return pole
+
         # Convert imaginary poles to real if they are close enough
         if imtol > 0.0:
-
-            def round_to_real(pole: complex) -> complex:
-                if np.abs(pole.imag) < imtol:
-                    # If the imaginary part is small enough, return the real part
-                    return pole.real
-                return pole
-
             terms = list(
                 map(
                     lambda x: RationalTerm(round_to_real(x.pole), x.coef, x.order),
@@ -197,17 +196,11 @@ class RationalTerm:
             )
             for pole, pgroup in grouped_terms.items():
                 # Sum the coefficients of the terms with the same pole
-                coef = sum(term.coef for term in pgroup)
+                coef = round_to_real(sum(term.coef for term in pgroup))
                 if not np.isclose(coef, 0.0, atol=atol, rtol=rtol):
                     simplified_terms[(pole, order)] = coef
 
-        return list(
-            [
-                RationalTerm(r, c, k)
-                for (r, k), c in simplified_terms.items()
-                if c != 0.0
-            ]
-        )
+        return list([RationalTerm(r, c, k) for (r, k), c in simplified_terms.items()])
 
     def __call__(self, x: ArrayLike) -> ArrayLike:
         """Evaluate the term at the given x values.

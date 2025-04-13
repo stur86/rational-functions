@@ -138,7 +138,6 @@ def test_rational_term_str(rterm: RationalTerm, snapshot: Snapshot) -> None:
     ],
 )
 def test_rational_term_product(rterm1: RationalTerm, rterm2: RationalTerm) -> None:
-
     rtermprod = RationalTerm.product(rterm1, rterm2)
 
     for term in rtermprod:
@@ -183,7 +182,6 @@ def test_rational_term_polynomial_product(
 
 
 def test_rational_term_neg() -> None:
-
     rterm = RationalTerm(3.0 + 1.0j, 1.0)
 
     x = np.linspace(-1, 1, 50)
@@ -214,3 +212,24 @@ def test_simplify() -> None:
     assert simplified_terms[1].order == rterm3.order
     assert np.isclose(simplified_terms[0].coef, 3.0)
     assert np.isclose(simplified_terms[1].coef, -1.0)
+
+    # Testing simplification with tolerances
+    rterm1 = RationalTerm(2.999, 1.0)
+    rterm2 = RationalTerm(3.001, 2.0)
+
+    simplified_terms = RationalTerm.simplify([rterm1, rterm2], atol=0.01)
+    # Check that the simplified terms are correct
+    assert len(simplified_terms) == 1
+    assert simplified_terms[0].pole == 3.0
+    assert simplified_terms[0].order == 1
+    assert simplified_terms[0].coef == 3.0
+
+    rterm1 = RationalTerm(3.0, 1.0 + 0.001j)
+    rterm2 = RationalTerm(3.0 + 0.001j, 2.0)
+    simplified_terms = RationalTerm.simplify([rterm1, rterm2], imtol=0.01)
+
+    # Check that the simplified terms are correct
+    assert len(simplified_terms) == 1
+    assert simplified_terms[0].pole == 3.0
+    assert simplified_terms[0].order == 1
+    assert simplified_terms[0].coef == 3.0
