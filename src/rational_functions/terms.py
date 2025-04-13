@@ -34,33 +34,28 @@ class RationalTerm:
             coef (complex): Coefficient for the numerator
             order (int): Order of the term
                 Defaults to 1.
-                
+
         Raises:
             ValueError: If the order is less than 1.
         """
-        
+
         if order < 1:
             raise ValueError("Order must be greater than or equal to 1")
 
         self._r = pole
         self._c = coef
         self._k = order
-        
 
     def __neg__(self) -> "RationalTerm":
         """Negate the term."""
         return self.__class__(self._r, -self._c, self._k)
-    
+
     def __eq__(self, other: object) -> bool:
         """Check if two terms are equal."""
         if not isinstance(other, RationalTerm):
             return False
-        return (
-            self._r == other._r
-            and self._c == other._c
-            and self._k == other._k
-        )
-        
+        return self._r == other._r and self._c == other._c and self._k == other._k
+
     def __hash__(self) -> int:
         """Hash the term."""
         return hash((self._r, self._c, self._k))
@@ -74,12 +69,12 @@ class RationalTerm:
     def coef(self) -> complex:
         """Return the coefficient of the term."""
         return self._c
-    
+
     @property
     def order(self) -> int:
         """Return the order of the term."""
         return self._k
-    
+
     @property
     def denominator_root(self) -> PolynomialRoot:
         """Return the root of the denominator."""
@@ -88,7 +83,7 @@ class RationalTerm:
     @property
     def denominator(self) -> Polynomial:
         """Return the denominator of the term."""
-        return Polynomial([-self._r, 1.0])**self._k
+        return Polynomial([-self._r, 1.0]) ** self._k
 
     @staticmethod
     def product(term1: "RationalTerm", term2: "RationalTerm") -> list["RationalTerm"]:
@@ -140,7 +135,9 @@ class RationalTerm:
         poly_out = num // den
         poly_rem = num % den
 
-        terms = partial_frac_decomposition(poly_rem.coef, [PolynomialRoot(term.pole, term.order)])
+        terms = partial_frac_decomposition(
+            poly_rem.coef, [PolynomialRoot(term.pole, term.order)]
+        )
 
         return terms, poly_out
 
@@ -164,11 +161,13 @@ class RationalTerm:
             else:
                 simplified_terms[key] = term.coef
 
-        return list([
-            RationalTerm(r, c, k)
-            for (r, k), c in simplified_terms.items()
-            if c != 0.0
-        ])
+        return list(
+            [
+                RationalTerm(r, c, k)
+                for (r, k), c in simplified_terms.items()
+                if c != 0.0
+            ]
+        )
 
     def __call__(self, x: ArrayLike) -> ArrayLike:
         """Evaluate the term at the given x values.
@@ -185,7 +184,7 @@ class RationalTerm:
 
     def deriv(self, m: int = 1) -> "RationalTerm":
         """Compute the derivative of the term.
-        
+
         Args:
             m (int): Order of the derivative
                 Defaults to 1.
@@ -193,11 +192,11 @@ class RationalTerm:
         Returns:
             RationalTerm: Term of the derivative
         """
-        
+
         assert m >= 1, "Derivative order must be greater than or equal to 1"
 
-        c = self._c *np.prod(self.order+np.arange(m))*(-1)**m                
-        return RationalTerm(self.pole, c, self.order+m)
+        c = self._c * np.prod(self.order + np.arange(m)) * (-1) ** m
+        return RationalTerm(self.pole, c, self.order + m)
 
     def integ(self) -> RationalIntegralGeneralTerm:
         """Compute the integral of the term.
@@ -209,7 +208,7 @@ class RationalTerm:
         if self.order == 1:
             return RationalIntegralLogTerm(self._c, self.pole)
         else:
-            c = -self._c / (self.order-1)
+            c = -self._c / (self.order - 1)
             return RationalTerm(self.pole, c, self.order - 1)
 
     def __str__(self) -> str:
@@ -218,9 +217,7 @@ class RationalTerm:
         den = Polynomial([-self.pole, 1.0])
         mul_str = ""
         if self.order > 1:
-            mul_str = str(self.order).translate(
-                Polynomial._superscript_mapping
-            )
+            mul_str = str(self.order).translate(Polynomial._superscript_mapping)
 
         return f"{num:.2G} / ({den}){mul_str}"
 

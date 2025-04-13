@@ -8,19 +8,13 @@ from rational_functions.terms import RationalTerm
 @pytest.mark.parametrize(
     "terms,poly",
     [
+        ([RationalTerm(3.0, 1.0)], None),
+        ([], Polynomial([1.0, 2.0])),
         (
-            [RationalTerm(3.0, 1.0)],
-            None
+            [RationalTerm(2.0 + 1.0j, 1.0), RationalTerm(2.0 - 1.0j, 1.0)],
+            Polynomial([1.0, 2.0]),
         ),
-        (
-            [],
-            Polynomial([1.0, 2.0])
-        ),
-        (
-            [RationalTerm(2.0+1.0j, 1.0), RationalTerm(2.0-1.0j, 1.0)],
-            Polynomial([1.0, 2.0])
-        )
-    ]
+    ],
 )
 def test_ratfunc_eval(terms: list[RationalTerm], poly: Polynomial | None):
     """Test the evaluation of the rational function."""
@@ -32,6 +26,3 @@ def test_ratfunc_eval(terms: list[RationalTerm], poly: Polynomial | None):
     if poly is not None:
         y2 += poly(x)
     assert np.allclose(y1, y2)
-
-
-    

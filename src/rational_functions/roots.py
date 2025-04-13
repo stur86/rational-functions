@@ -40,7 +40,7 @@ class PolynomialRoot:
 
     def monic_polynomial(self) -> Polynomial:
         """Return the monic polynomial for the root."""
-        return Polynomial([-self.value, 1.0])**self.multiplicity
+        return Polynomial([-self.value, 1.0]) ** self.multiplicity
 
     def with_multiplicity(self, multiplicity: int) -> "PolynomialRoot":
         """Return a new PolynomialRoot with a different multiplicity."""
@@ -48,12 +48,12 @@ class PolynomialRoot:
             value=self.value,
             multiplicity=multiplicity,
         )
-    
+
     def is_equivalent(self, root: "PolynomialRoot") -> bool:
         """Check if two roots are equivalent, multiplicity aside."""
-        
+
         return self.value == root.value
-        
+
     def highest(self, root: "PolynomialRoot") -> "PolynomialRoot":
         """Return the root with the highest multiplicity between
         two equivalent roots.
@@ -67,15 +67,14 @@ class PolynomialRoot:
         Raises:
             AssertionError: If the roots are not equivalent.
         """
-        
+
         assert self.is_equivalent(root), "Roots are not equivalent."
-        
+
         return PolynomialRoot(
             value=self.value,
             multiplicity=max(self.multiplicity, root.multiplicity),
         )
-    
+
     def __hash__(self) -> int:
         """Return a hash of the root."""
         return hash((self.value, self.multiplicity))
-        

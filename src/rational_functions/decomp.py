@@ -88,7 +88,6 @@ def partial_frac_decomposition(
     m_i = 0
 
     for i, r in enumerate(denominator_roots):
-
         # Build the polynomial of all other roots
         residual_p = Polynomial([1.0])
         for j, r2 in enumerate(denominator_roots):
@@ -105,7 +104,7 @@ def partial_frac_decomposition(
 
     y = np.zeros(deg, dtype=np.complex128)
     # We build the right-hand side of the system
-    y[:len(num_coef)] = num_coef
+    y[: len(num_coef)] = num_coef
 
     # Solving gives us the corresponding coefficients of the partial fractions
     x = np.linalg.solve(M, y)
@@ -117,6 +116,6 @@ def partial_frac_decomposition(
         for i in range(r.multiplicity):
             coef = x[m_i]
             m_i += 1
-            terms.append(RationalTerm(r.value, coef, i+1))
+            terms.append(RationalTerm(r.value, coef, i + 1))
 
     return terms

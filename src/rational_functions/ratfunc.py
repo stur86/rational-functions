@@ -237,8 +237,8 @@ class RationalFunction:
         """
         if isinstance(other, RationalFunction):
             # Find extended numerator for both
-            ext_numerator = self.numerator + self._poly*self.denominator
-            other_ext_numerator = other.numerator + other._poly*other.denominator
+            ext_numerator = self.numerator + self._poly * self.denominator
+            other_ext_numerator = other.numerator + other._poly * other.denominator
             numerator = ext_numerator * other.denominator
             denominator = other_ext_numerator * self.denominator
             return RationalFunction.from_fraction(
@@ -246,18 +246,25 @@ class RationalFunction:
                 denominator,
             )
         elif isinstance(other, Polynomial):
-            # We must divide by the highest order coefficience since the 
+            # We must divide by the highest order coefficience since the
             # denominator will always be monic
-            numerator = (self.numerator+self._poly*self.denominator)/other.coef[-1]
-            den_poles = self.poles + catalogue_roots(other, 
-                                                     atol=self.__approx_opts.atol,
-                                                     rtol=self.__approx_opts.rtol,
-                                                     imtol=self.__approx_opts.imtol)
+            numerator = (self.numerator + self._poly * self.denominator) / other.coef[
+                -1
+            ]
+            den_poles = self.poles + catalogue_roots(
+                other,
+                atol=self.__approx_opts.atol,
+                rtol=self.__approx_opts.rtol,
+                imtol=self.__approx_opts.imtol,
+            )
             return RationalFunction.from_poles(numerator, den_poles)
         elif np.isscalar(other):
             # Divide each term by the scalar
             new_poly = self._poly / other
-            new_terms = map(lambda t: RationalTerm(t.pole, t.coef / other, order=t.order), self._terms)
+            new_terms = map(
+                lambda t: RationalTerm(t.pole, t.coef / other, order=t.order),
+                self._terms,
+            )
             return RationalFunction(new_terms, new_poly)
 
         return NotImplemented
@@ -282,7 +289,7 @@ class RationalFunction:
 
     def deriv(self, m: int = 1) -> "RationalFunction":
         r"""Differentiate the rational function in x.
-        
+
         $$
         \begin{align*}
             \frac{d^m R(x)}{dx^m} &= \frac{d^{m-1}R'(x)}{dx^{m-1}} = \\
