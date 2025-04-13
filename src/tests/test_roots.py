@@ -58,3 +58,15 @@ def test_polyroot_equivalence(
     r1: PolynomialRoot, r2: PolynomialRoot, is_equivalent: bool
 ):
     assert r1.is_equivalent(r2) == is_equivalent
+
+
+def test_polyroot_highest():
+    r1 = PolynomialRoot(value=3.0, multiplicity=2)
+    r2 = PolynomialRoot(value=3.0, multiplicity=3)
+
+    r3 = r1.highest(r2)
+    r4 = r2.highest(r1)
+
+    assert r3 == r4
+    assert r3.value == 3.0
+    assert r3.multiplicity == 3
