@@ -145,7 +145,10 @@ class RationalTerm:
 
     @staticmethod
     def simplify(
-        terms: list["RationalTerm"], atol: float = 0.0, rtol: float = 0.0
+        terms: list["RationalTerm"],
+        atol: float = 0.0,
+        rtol: float = 0.0,
+        imtol: float = 0.0,
     ) -> list["RationalTerm"]:
         """Simplify a list of RationalTerms by combining terms with the same pole
         and order. If tolerances are specified, terms can be grouped also
@@ -157,10 +160,29 @@ class RationalTerm:
                 Defaults to 0.0.
             rtol (float): Relative tolerance for closeness.
                 Defaults to 0.0.
+            imtol (float): Imaginary tolerance to make a complex
+                number with a small imaginary part real.
+                Defaults to 0.0.
 
         Returns:
             list[RationalTerm]: Simplified list of RationalTerms
         """
+
+        # Convert imaginary poles to real if they are close enough
+        if imtol > 0.0:
+
+            def round_to_real(pole: complex) -> complex:
+                if np.abs(pole.imag) < imtol:
+                    # If the imaginary part is small enough, return the real part
+                    return pole.real
+                return pole
+
+            terms = list(
+                map(
+                    lambda x: RationalTerm(round_to_real(x.pole), x.coef, x.order),
+                    terms,
+                )
+            )
 
         simplified_terms: dict[tuple[complex, int], complex] = {}
         # First, group by order

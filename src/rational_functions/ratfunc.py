@@ -41,17 +41,33 @@ class RationalFunction:
 
     __approx_opts: ApproximationOptions = ApproximationOptions()
 
-    def __init__(self, terms: list[RationalTerm], poly: PolynomialDef | None = None):
-        """Initialize the rational function.
+    def __init__(
+        self,
+        terms: list[RationalTerm],
+        poly: PolynomialDef | None = None,
+        atol: float | None = None,
+        rtol: float | None = None,
+        imtol: float | None = None,
+    ) -> None:
+        """Initialize the rational function. Terms with very close poles or
+        near-zero coefficients will be grouped together and simplified
+        according to the tolerances passed to the constructor or the global
+        approximation options (see set_approximation_options).
 
         Args:
             terms (list[RationalTerm]): List of terms.
             poly (Polynomial, optional): Residual polynomial. Defaults to None.
+            atol (float, optional): Absolute tolerance for root equivalence. Defaults to None.
+            rtol (float, optional): Relative tolerance for root equivalence. Defaults to None.
+            imtol (float, optional): Tolerance for imaginary part of roots to be considered
+                zero. Defaults to None.
         """
 
-        self._terms = RationalTerm.simplify(
-            terms, self.__approx_opts.atol, self.__approx_opts.rtol
-        )
+        atol = atol if atol is not None else self.__approx_opts.atol
+        rtol = rtol if rtol is not None else self.__approx_opts.rtol
+        imtol = imtol if imtol is not None else self.__approx_opts.imtol
+
+        self._terms = RationalTerm.simplify(terms, atol, rtol)
         self._lcm = RootLCM([term.denominator_root for term in self._terms])
         self._poly = as_polynomial(poly) if poly is not None else Polynomial([0.0])
         self._poly = self._poly.trim()
