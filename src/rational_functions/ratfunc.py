@@ -480,9 +480,7 @@ class RationalFunction:
         # polyutils.as_series function,
         # which is a necessary step in all
         # the Polynomial operations.
-        raise RuntimeError(
-            "Cannot convert RationalFunction to array. Use __call__ instead."
-        )
+        raise RuntimeError("Cannot convert RationalFunction to array.")
 
     @classmethod
     def set_approximation_options(
