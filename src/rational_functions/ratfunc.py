@@ -8,6 +8,7 @@ from rational_functions.decomp import catalogue_roots, partial_frac_decompositio
 from rational_functions.roots import PolynomialRoot
 from rational_functions.lcm import RootLCM
 from rational_functions.utils import as_polynomial, PolynomialDef
+from rational_functions.integral import RationalFunctionIntegral, _integrate_terms
 from dataclasses import dataclass
 
 _RFuncOpCompatibleType = Union["RationalFunction", Polynomial, np.number]
@@ -350,6 +351,21 @@ class RationalFunction:
         diff_terms = [term.deriv(m) for term in self._terms]
 
         return RationalFunction(diff_terms, diff_poly)
+
+    def integ(self) -> Union[RationalFunctionIntegral, "RationalFunction"]:
+        """Integrate the rational function.
+
+        Returns:
+            Union[RationalFunctionIntegral, RationalFunction]: Integral of the rational function.
+        """
+        int_terms = _integrate_terms(self._terms)
+        int_poly = self._poly.integ()
+        # Check if all terms are RationalTerms
+        if all(isinstance(term, RationalTerm) for term in int_terms):
+            # If all terms are RationalTerms, return a RationalFunction
+            return RationalFunction(int_terms, int_poly)
+
+        return RationalFunctionIntegral(int_terms, self._poly)
 
     def __call__(self, x: ArrayLike) -> ArrayLike:
         """Evaluate the rational function at given points.

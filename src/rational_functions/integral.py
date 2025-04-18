@@ -99,6 +99,40 @@ def _int_cconj_pair(
     return out_terms
 
 
+def _integrate_terms(
+    terms: list[RationalTerm], atol: float = 0.0, rtol: float = 0.0
+) -> list[RationalIntegralGeneralTerm]:
+    """Integrate a list of rational terms and return the resulting integral terms.
+    This function handles complex conjugate pairs of terms, identifying them with
+    tolerances and integrating them appropriately.
+
+    Args:
+        terms (list[RationalTerm]): List of RationalTerms to integrate.
+        atol (float): Absolute tolerance for comparing terms.
+        rtol (float): Relative tolerance for comparing terms.
+
+    Returns:
+        list[RationalIntegralGeneralTerm]: List of integrated terms.
+    """
+    int_terms: list[RationalIntegralGeneralTerm] = []
+
+    # First, split out the complex conjugate pairs
+    cconj_terms, terms = _find_cconj_pairs(terms, atol=atol, rtol=rtol)
+
+    # Now, first the regular terms
+    for term in terms:
+        if term.order == 1:
+            int_terms.append(RationalIntegralLogTerm(term.coef, term.pole))
+        elif term.order > 1:
+            m = term.order - 1
+            int_terms.append(RationalTerm(term.pole, -1 / m * term.coef, m))
+
+    for t1, t2 in cconj_terms:
+        int_terms += _int_cconj_pair(t1.coef, t2.coef, t1.pole)
+
+    return int_terms
+
+
 class RationalFunctionIntegral:
     """Class that encapsulates the integral of a rational function.
     It includes different kinds of terms, including logarithmic and arctangent terms.
@@ -239,21 +273,9 @@ class RationalFunctionIntegral:
             rtol (float): Relative tolerance for comparing terms.
 
         """
-        int_terms: list[RationalIntegralGeneralTerm] = []
-
-        # First, split out the complex conjugate pairs
-        cconj_terms, terms = _find_cconj_pairs(terms, atol=atol, rtol=rtol)
-
-        # Now, first the regular terms
-        for term in terms:
-            if term.order == 1:
-                int_terms.append(RationalIntegralLogTerm(term.coef, term.pole))
-            elif term.order > 1:
-                m = term.order - 1
-                int_terms.append(RationalTerm(term.pole, -1 / m * term.coef, m))
-
-        for t1, t2 in cconj_terms:
-            int_terms += _int_cconj_pair(t1.coef, t2.coef, t1.pole)
+        int_terms: list[RationalIntegralGeneralTerm] = _integrate_terms(
+            terms, atol=atol, rtol=rtol
+        )
 
         int_poly: PolynomialDef = None
         if poly is not None:
