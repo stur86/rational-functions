@@ -93,6 +93,41 @@ def test_ratint_from_rterms(
     y2 = np.sum([iterm(x) for iterm in int_terms], axis=0)
     assert np.allclose(y1, y2)
 
+    # Try it with a polynomial part
+    tpoly = Polynomial([1.0, 2.0, -0.5])
+
+    ratint = RationalFunctionIntegral.from_rational_terms(terms, tpoly)
+    assert isinstance(ratint, RationalFunctionIntegral)
+
+    y1 = ratint(x)
+    y2 += tpoly.integ()(x)
+
+    assert np.allclose(y1, y2)
+
+
+@pytest.mark.filterwarnings("ignore:All terms are RationalTerms")
+def test_int_real_line() -> None:
+    """Test the real_line method of RationalFunctionIntegral."""
+
+    r1 = RationalFunctionIntegral([], [1.0, 1.0])
+    assert np.isnan(r1.real_line())
+
+    r2 = RationalFunctionIntegral([RationalIntegralLogTerm(1.0, 1.0)])
+    assert np.isnan(r2.real_line())
+
+    r3 = RationalFunctionIntegral([RationalIntegralLogPairTerm(1.0, 1.0)])
+    assert np.isnan(r3.real_line())
+    assert r3.real_line(as_cauchy_pv=True) == 0.0
+
+    r4 = RationalFunctionIntegral(
+        [
+            RationalIntegralArctanTerm(1.0, 1.0 + 1.0j),
+            RationalIntegralArctanTerm(2.0, 1.0 - 1.5j),
+        ]
+    )
+
+    assert np.isclose(r4.real_line(), -np.pi / 3)
+
 
 def test_cconj_pairs():
     """Test the _int_cconj_pair function."""

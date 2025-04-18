@@ -348,6 +348,11 @@ class RationalIntegralArctanTerm(RationalIntegralTermBase):
         self._x0 = r.real
         self._w = r.imag
 
+    @property
+    def real_line(self) -> complex:
+        """Evaluate the integral over the real line."""
+        return np.pi * self._a / self._w
+
     def __call__(self, x: ArrayLike) -> ArrayLike:
         """Evaluate the term at the given x values.
 

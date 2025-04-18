@@ -131,6 +131,57 @@ class RationalFunctionIntegral:
         self._poly = as_polynomial(poly)
         self._terms = list(terms)
 
+    def definite(self, a: float, b: float) -> complex:
+        """Evaluate the definite integral from a to b.
+
+        Args:
+            a (float): Lower limit of integration.
+            b (float): Upper limit of integration.
+
+        Returns:
+            complex: Value of the definite integral.
+        """
+        assert np.real(a) == a, "Lower limit must be real."
+        assert np.real(b) == b, "Upper limit must be real."
+
+        return self(b) - self(a)
+
+    def real_line(self, as_cauchy_pv: bool = False) -> complex:
+        """Evaluate the integral over the real line,
+        from negative infinity to positive infinity.
+
+        Args:
+            as_cauchy_pv (bool): If True, the integral should be interpreted
+                as a Cauchy principal value. Otherwise, it is a regular integral
+                and will always be NaN if the integral diverges.
+
+        Returns:
+            complex: Value of the integral over the real line.
+        """
+
+        ans = 0.0
+        if self._poly.degree() > 0:
+            # Polynomial part diverges
+            return np.nan
+
+        for t in self._terms:
+            if isinstance(t, RationalTerm):
+                # Contribution is zero
+                continue
+            elif isinstance(t, RationalIntegralLogTerm):
+                ans += np.nan
+            elif isinstance(t, RationalIntegralLogPairTerm):
+                if as_cauchy_pv:
+                    # Cauchy principal value is zero,
+                    # as the term goes to infinity but is symmetric
+                    continue
+                else:
+                    ans += np.nan
+            elif isinstance(t, RationalIntegralArctanTerm):
+                ans += t.real_line
+
+        return ans
+
     def __call__(self, x: ArrayLike) -> ArrayLike:
         """Evaluate the integral at given points."""
 
@@ -170,7 +221,11 @@ class RationalFunctionIntegral:
 
     @classmethod
     def from_rational_terms(
-        cls, terms: list[RationalTerm], atol: float = 0.0, rtol: float = 0.0
+        cls,
+        terms: list[RationalTerm],
+        poly: PolynomialDef | None = None,
+        atol: float = 0.0,
+        rtol: float = 0.0,
     ) -> "RationalFunctionIntegral":
         """Create a RationalFunctionIntegral from a list of RationalTerms. Terms
         will be compared to detect conjugate pairs so they can be combined into
@@ -178,6 +233,8 @@ class RationalFunctionIntegral:
 
         Args:
             terms (list[RationalTerm]): List of RationalTerms to include in the integral.
+            poly (PolynomialDef | None): Polynomial part of the rational function to
+                integrate. If None, defaults to a zero polynomial.
             atol (float): Absolute tolerance for comparing terms.
             rtol (float): Relative tolerance for comparing terms.
 
@@ -198,4 +255,8 @@ class RationalFunctionIntegral:
         for t1, t2 in cconj_terms:
             int_terms += _int_cconj_pair(t1.coef, t2.coef, t1.pole)
 
-        return cls(int_terms, Polynomial([0.0]))
+        int_poly: PolynomialDef = None
+        if poly is not None:
+            int_poly = as_polynomial(poly).integ()
+
+        return cls(int_terms, int_poly)

@@ -19,6 +19,7 @@ def test_arctan_term():
     x = np.linspace(-1, 1, 100)
 
     assert np.allclose(atant(x), a / r_i * np.arctan((x - r_r) / r_i))
+    assert np.isclose(atant.real_line, a / r_i * np.pi)
 
 
 def test_log_term():
