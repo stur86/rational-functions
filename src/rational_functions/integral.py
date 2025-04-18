@@ -1,4 +1,5 @@
 import warnings
+from typing import Union
 from .terms import RationalIntegralGeneralTerm, RationalIntegralLogTerm, RationalTerm
 import numpy as np
 from numpy.typing import ArrayLike
@@ -15,12 +16,25 @@ class RationalFunctionIntegral:
     _terms: list[RationalIntegralGeneralTerm]
 
     def __init__(
-        self, terms: list[RationalIntegralGeneralTerm], poly: PolynomialDef
+        self,
+        terms: list[RationalIntegralGeneralTerm],
+        poly: PolynomialDef | None = None,
     ) -> None:
+        """Initialize the RationalFunctionIntegral with a list of terms and an optional polynomial.
+
+        Args:
+            terms (list[RationalIntegralGeneralTerm]): List of terms to include in the integral.
+            poly (PolynomialDef | None, optional): Polynomial part of the integral.
+                If None, defaults to a zero polynomial.
+        """
+
         if all(isinstance(term, RationalTerm) for term in terms):
             warnings.warn(
                 "All terms are RationalTerms. Consider using a regular RationalFunction instead."
             )
+
+        if poly is None:
+            poly = Polynomial([0.0])
 
         self._poly = as_polynomial(poly)
         self._terms = list(terms)
@@ -29,15 +43,29 @@ class RationalFunctionIntegral:
         """Evaluate the integral at given points."""
 
         x = np.asarray(x)
-        result = self._poly(x)
+        result = self._poly(x).astype(np.complex128)
         for term in self._terms:
             result += term(x)
         return result
 
-    def __add__(self, other: "RationalFunctionIntegral") -> "RationalFunctionIntegral":
+    def __add__(
+        self, other: Union[Polynomial, "RationalFunctionIntegral"]
+    ) -> "RationalFunctionIntegral":
+        other_terms: list[RationalIntegralGeneralTerm]
+        other_poly: Polynomial
+
+        if isinstance(other, RationalFunctionIntegral):
+            other_terms = other._terms
+            other_poly = other._poly
+        elif isinstance(other, Polynomial):
+            other_terms = []
+            other_poly = as_polynomial(other)
+        else:
+            return NotImplemented
+
         return RationalFunctionIntegral(
-            self._terms + other._terms,
-            self._poly + other._poly,
+            self._terms + other_terms,
+            self._poly + other_poly,
         )
 
     def __array__(self) -> np.ndarray:
