@@ -391,7 +391,11 @@ class RationalFunction:
         Returns:
             str: String representation.
         """
-        return f"{self._poly} + ({self.numerator})/({self.denominator})"
+        ans = f"({self.numerator})/({self.denominator})"
+        if self._poly != Polynomial([0.0]):
+            ans = f"{self._poly} + {ans}"
+
+        return ans
 
     def __array__(self) -> None:
         # This method is necessary to avoid
@@ -529,3 +533,6 @@ class RationalFunction:
             cls.__approx_opts.rtol = rtol
         if imtol is not None:
             cls.__approx_opts.imtol = imtol
+
+
+__all__ = ["RationalFunction"]

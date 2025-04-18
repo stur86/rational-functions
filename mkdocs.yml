@@ -1,5 +1,6 @@
 site_name: Rational Functions Documentation
 site_url: https://mydomain.org/mysite
+repo_url: https://github.com/stur86/rational-functions
 theme:
   name: material
   palette:
@@ -16,12 +17,17 @@ plugins:
               ignore_init_summary: true
             merge_init_into_class: true
   - autorefs
-  - api-autonav:
-      modules: ['src/rational_functions']
 # Math support
 markdown_extensions:
   - pymdownx.arithmatex:
       generic: true
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.superfences
 extra_javascript:
   - javascript/katex.js
   - https://unpkg.com/katex@0/dist/katex.min.js

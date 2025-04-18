@@ -37,4 +37,5 @@ test = { cmd = "pytest src/tests -v --cov=src/rational_functions --cov-report ht
 lint = { cmd = "ruff check src/rational_functions --fix", help = "Lint the project" }
 format = { cmd = "black src", help = "Format the code" }
 build-docs = { cmd = "mkdocs build", help = "Build the documentation" }
-regen-snapshots = { cmd = "pytest --snapshot-update", help = "Regenerate all snapshots for tests that need them" }
+serve-docs = { cmd = "mkdocs serve --livereload", help = "Serve the documentation" }
+regen-snapshots = { cmd = "pytest src/tests --snapshot-update", help = "Regenerate all snapshots for tests that need them" }
