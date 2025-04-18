@@ -358,14 +358,18 @@ class RationalFunction:
         Returns:
             Union[RationalFunctionIntegral, RationalFunction]: Integral of the rational function.
         """
-        int_terms = _integrate_terms(self._terms)
+
+        atol = self.__approx_opts.atol
+        rtol = self.__approx_opts.rtol
+
+        int_terms = _integrate_terms(self._terms, atol=atol, rtol=rtol)
         int_poly = self._poly.integ()
         # Check if all terms are RationalTerms
         if all(isinstance(term, RationalTerm) for term in int_terms):
             # If all terms are RationalTerms, return a RationalFunction
             return RationalFunction(int_terms, int_poly)
 
-        return RationalFunctionIntegral(int_terms, self._poly)
+        return RationalFunctionIntegral(int_terms, int_poly)
 
     def __call__(self, x: ArrayLike) -> ArrayLike:
         """Evaluate the rational function at given points.
@@ -388,6 +392,18 @@ class RationalFunction:
             str: String representation.
         """
         return f"{self._poly} + ({self.numerator})/({self.denominator})"
+
+    def __array__(self) -> None:
+        # This method is necessary to avoid
+        # the Polynomial __add__ and __mul__ methods
+        # being called when adding or multiplying
+        # Polynomial with RationalFunctions.
+
+        # It works by raising an error in the
+        # polyutils.as_series function,
+        # which is a necessary step in all
+        # the Polynomial operations.
+        raise RuntimeError("Cannot convert RationalFunction to array.")
 
     @classmethod
     def from_fraction(
@@ -485,18 +501,6 @@ class RationalFunction:
             poles,
         )
         return cls(rterms, poly)
-
-    def __array__(self) -> None:
-        # This method is necessary to avoid
-        # the Polynomial __add__ and __mul__ methods
-        # being called when adding or multiplying
-        # Polynomial with RationalFunctions.
-
-        # It works by raising an error in the
-        # polyutils.as_series function,
-        # which is a necessary step in all
-        # the Polynomial operations.
-        raise RuntimeError("Cannot convert RationalFunction to array.")
 
     @classmethod
     def set_approximation_options(

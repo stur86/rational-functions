@@ -3,8 +3,10 @@ import numpy as np
 from typing import TypeVar
 from itertools import chain, product
 from numpy.polynomial import Polynomial
+from pytest_snapshot.plugin import Snapshot
 from rational_functions import RationalFunction
 from rational_functions.terms import RationalTerm
+from rational_functions.integral import RationalFunctionIntegral
 
 
 T = TypeVar("T")
@@ -333,6 +335,41 @@ def test_rfunc_deriv(rf: RationalFunction, m: int) -> None:
     # Exclude edges from comparison, and use a relaxed tolerance
     # due to flaws in the numerical derivative
     assert np.allclose(y0[m:-m], y1[m:-m], rtol=5e-3)
+
+
+@pytest.mark.parametrize("rf", _test_ratfuncs[2:3])
+def test_rfunc_integ(rf: RationalFunction) -> None:
+    """Test integral of a rational function."""
+    x = np.linspace(-1, 1, 10000)
+
+    i1 = rf.integ()
+
+    # Are all the terms higher than order 1?
+    high_ord = all(term.order > 1 for term in rf._terms)
+    if high_ord:
+        assert isinstance(i1, RationalFunction)
+    else:
+        assert isinstance(i1, RationalFunctionIntegral)
+
+    assert i1._poly == rf._poly.integ()
+
+    y0 = rf(x)
+    y1 = i1(x) - i1(x[0])
+    y2 = np.cumsum(y0) * (x[1] - x[0])
+    y2 -= y2[0]
+
+    assert np.allclose(y1, y2, atol=1e-3)
+
+
+@pytest.mark.parametrize(
+    "rf",
+    _test_ratfuncs,
+)
+def test_rfunc_str(rf: RationalFunction, snapshot: Snapshot) -> None:
+    """Test the __str__ method of the RationalFunction class."""
+    assert isinstance(rf.__str__(), str)
+
+    snapshot.assert_match(rf.__str__(), "ratfunc_str")
 
 
 def test_rfunc_notimpl():
