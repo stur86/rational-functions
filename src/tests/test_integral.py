@@ -8,6 +8,7 @@ from rational_functions.terms import (
     RationalIntegralGeneralTerm,
     RationalTerm,
 )
+from .conftest import ComparisonMethods
 
 
 @dataclass(frozen=True)
@@ -55,12 +56,15 @@ def test_ratint_basic(int_pair: TermPair) -> None:
 
 @pytest.mark.filterwarnings("ignore:All terms are RationalTerms")
 @pytest.mark.parametrize("int_pair", _term_int_pairs)
-def test_ratint_from_iterms(int_pair: TermPair) -> None:
+def test_ratint_from_iterms(
+    int_pair: TermPair, comparison_methods: ComparisonMethods
+) -> None:
     """Test creation of RationalFunctionIntegral from RationalIntegralGeneralTerm."""
     terms, int_terms = int_pair.f, int_pair.intf
     ratint = RationalFunctionIntegral.from_rational_terms(terms)
 
     assert isinstance(ratint, RationalFunctionIntegral)
+    assert comparison_methods.compare_ratint_seqs(ratint._terms, int_terms)
 
     x = np.linspace(-1, 1, 100)
 
