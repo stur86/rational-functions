@@ -184,11 +184,18 @@ class RationalFunctionIntegral:
         """
         int_terms: list[RationalIntegralGeneralTerm] = []
 
+        # First, split out the complex conjugate pairs
+        cconj_terms, terms = _find_cconj_pairs(terms, atol=atol, rtol=rtol)
+
+        # Now, first the regular terms
         for term in terms:
             if term.order == 1:
                 int_terms.append(RationalIntegralLogTerm(term.coef, term.pole))
             elif term.order > 1:
                 m = term.order - 1
                 int_terms.append(RationalTerm(term.pole, -1 / m * term.coef, m))
+
+        for t1, t2 in cconj_terms:
+            int_terms += _int_cconj_pair(t1.coef, t2.coef, t1.pole)
 
         return cls(int_terms, Polynomial([0.0]))

@@ -29,6 +29,21 @@ _term_int_pairs: list[TermPair] = [
     TermPair((RationalTerm(2.0, 1.5j, 1),), (RationalIntegralLogTerm(1.5j, 2),)),
     TermPair((RationalTerm(2.0j, 1.5, 1),), (RationalIntegralLogTerm(1.5, 2.0j),)),
     TermPair((RationalTerm(2.0, 1.5, 2),), (RationalTerm(2.0, -1.5, 1),)),
+    TermPair(
+        (RationalTerm(1.0 + 0.5j, 1.0), RationalTerm(1.0 - 0.5j, 1.0)),
+        (RationalIntegralLogPairTerm(2.0, 1.0 + 0.5j),),
+    ),
+    TermPair(
+        (RationalTerm(1.0 + 0.5j, 1.0j), RationalTerm(1.0 - 0.5j, -1.0j)),
+        (RationalIntegralArctanTerm(-1.0, 1.0 + 0.5j),),
+    ),
+    TermPair(
+        (RationalTerm(1.0 + 0.5j, 1.0), RationalTerm(1.0 - 0.5j, 0.5)),
+        (
+            RationalIntegralLogPairTerm(1.5, 1.0 + 0.5j),
+            RationalIntegralArctanTerm(0.25j, 1.0 + 0.5j),
+        ),
+    ),
 ]
 
 
@@ -62,7 +77,7 @@ def test_ratint_basic(int_pair: TermPair) -> None:
 
 @pytest.mark.filterwarnings("ignore:All terms are RationalTerms")
 @pytest.mark.parametrize("int_pair", _term_int_pairs)
-def test_ratint_from_iterms(
+def test_ratint_from_rterms(
     int_pair: TermPair, comparison_methods: ComparisonMethods
 ) -> None:
     """Test creation of RationalFunctionIntegral from RationalIntegralGeneralTerm."""
