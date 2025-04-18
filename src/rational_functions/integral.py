@@ -13,6 +13,66 @@ from numpy.polynomial import Polynomial
 from rational_functions.utils import as_polynomial, PolynomialDef
 
 
+def _find_cconj_pairs(
+    terms: list[RationalTerm],
+    atol: float = 0.0,
+    rtol: float = 0.0,
+) -> tuple[list[tuple[RationalTerm, RationalTerm]], list[RationalTerm]]:
+    """Identify complex conjugate pairs in a list of rational terms,
+    and separate them from the rest. Tolerances can be set to control
+    the comparison.
+
+    Args:
+        terms (list[RationalTerm]): List of RationalTerms to check for conjugate pairs.
+        atol (float, optional): Absolute tolerance for comparison. Defaults to 0.0.
+        rtol (float, optional): Relative tolerance for comparison. Defaults to 0.0.
+
+    Returns:
+        list[tuple[RationalTerm, RationalTerm]]: List of tuples containing conjugate pairs.
+        list[RationalTerm]: List of remaining terms that are not part of a conjugate pair.
+    """
+
+    conj_pairs: list[tuple[RationalTerm, RationalTerm]] = []
+    remaining_terms: list[RationalTerm] = []
+
+    # Filter for terms that are guaranteed to be excluded
+    # from conjugate pairing
+    # (e.g., order > 1 or real pole)
+    def _exclude_term(t: RationalTerm) -> bool:
+        return (t.order > 1) or np.isclose(t.pole.imag, 0.0, atol=atol, rtol=rtol)
+
+    excluded_idx = [i for i, t in enumerate(terms) if _exclude_term(t)]
+    remaining_terms += [terms[i] for i in excluded_idx]
+    terms = [t for i, t in enumerate(terms) if i not in excluded_idx]
+
+    evaluated = [False] * len(terms)
+
+    for i, t1 in enumerate(terms):
+        if evaluated[i]:
+            # Already evaluated
+            continue
+
+        for j, t2 in enumerate(terms[i + 1 :], start=i + 1):
+            if evaluated[j]:
+                continue
+
+            if np.isclose(t1.pole, np.conj(t2.pole), atol=atol, rtol=rtol):
+                # Found a conjugate pair
+                conj_pairs.append((t1, t2))
+                evaluated[i] = True
+                evaluated[j] = True
+                break
+
+        if not evaluated[i]:
+            # No conjugate pair found
+            remaining_terms.append(t1)
+            evaluated[i] = True
+            continue
+
+    assert all(evaluated), "Not all terms were evaluated."
+    return conj_pairs, remaining_terms
+
+
 def _int_cconj_pair(
     a1: complex, a2: complex, r: complex
 ) -> list[RationalIntegralGeneralTerm]:
@@ -110,9 +170,18 @@ class RationalFunctionIntegral:
 
     @classmethod
     def from_rational_terms(
-        cls, terms: list[RationalTerm]
+        cls, terms: list[RationalTerm], atol: float = 0.0, rtol: float = 0.0
     ) -> "RationalFunctionIntegral":
-        """Create a RationalFunctionIntegral from a list of RationalTerms."""
+        """Create a RationalFunctionIntegral from a list of RationalTerms. Terms
+        will be compared to detect conjugate pairs so they can be combined into
+        appropriate integral terms; tolerances can be set to control this.
+
+        Args:
+            terms (list[RationalTerm]): List of RationalTerms to include in the integral.
+            atol (float): Absolute tolerance for comparing terms.
+            rtol (float): Relative tolerance for comparing terms.
+
+        """
         int_terms: list[RationalIntegralGeneralTerm] = []
 
         for term in terms:

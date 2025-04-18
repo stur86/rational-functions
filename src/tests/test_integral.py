@@ -2,7 +2,11 @@ import numpy as np
 from numpy.polynomial import Polynomial
 import pytest
 from dataclasses import dataclass
-from rational_functions.integral import RationalFunctionIntegral, _int_cconj_pair
+from rational_functions.integral import (
+    RationalFunctionIntegral,
+    _int_cconj_pair,
+    _find_cconj_pairs,
+)
 from rational_functions.terms import (
     RationalIntegralLogTerm,
     RationalIntegralGeneralTerm,
@@ -108,3 +112,22 @@ def test_cconj_pairs():
     assert out_terms[1]._a == -6 - 4.0j
     assert out_terms[1]._x0 == 3.0
     assert out_terms[1]._w == 4.0
+
+
+def test_find_conj_pairs() -> None:
+    # Test the _find_cconj_pairs function
+
+    terms = [
+        RationalTerm(1.0, 2.0),
+        RationalTerm(1 + 0.5j, 1.0, 1),
+        RationalTerm(1 + 2.0j, 1.0, 2),
+        RationalTerm(1 - 2.0j, 1.0, 2),
+        RationalTerm(1 - 0.5j, 1.0, 1),
+        RationalTerm(1 + 0.5j, 1.0, 1),
+        RationalTerm(1 - 0.6j, 1.0, 1),
+    ]
+
+    conj_pairs, remaining_terms = _find_cconj_pairs(terms)
+
+    assert conj_pairs == [(terms[1], terms[4])]
+    assert remaining_terms == [terms[0], terms[2], terms[3], terms[5], terms[6]]
