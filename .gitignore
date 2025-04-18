@@ -15,3 +15,6 @@ site/*
 # Generated coverage reports
 .coverage
 htmlcov/
+
+# VSCode settings
+.vscode/

@@ -314,7 +314,7 @@ class RationalIntegralLogPairTerm(RationalIntegralTermBase):
 
         self._a = a
         self._x0 = r.real
-        self._m = r.imag
+        self._w = r.imag
 
     def __call__(self, x: ArrayLike) -> ArrayLike:
         """Evaluate the term at the given x values.
@@ -325,7 +325,7 @@ class RationalIntegralLogPairTerm(RationalIntegralTermBase):
         Returns:
             ArrayLike: evaluated values
         """
-        return 0.5 * self._a * np.log((x - self._x0) ** 2 + self._m**2 + 0.0j)
+        return 0.5 * self._a * np.log((x - self._x0) ** 2 + self._w**2 + 0.0j)
 
 
 class RationalIntegralArctanTerm(RationalIntegralTermBase):
@@ -346,7 +346,7 @@ class RationalIntegralArctanTerm(RationalIntegralTermBase):
 
         self._a = a
         self._x0 = r.real
-        self._m = r.imag
+        self._w = r.imag
 
     def __call__(self, x: ArrayLike) -> ArrayLike:
         """Evaluate the term at the given x values.
@@ -358,4 +358,4 @@ class RationalIntegralArctanTerm(RationalIntegralTermBase):
             ArrayLike: evaluated values
         """
 
-        return self._a / self._m * np.arctan((x - self._x0) / self._m)
+        return self._a / self._w * np.arctan((x - self._x0) / self._w)

@@ -1,10 +1,42 @@
 import warnings
 from typing import Union
-from .terms import RationalIntegralGeneralTerm, RationalIntegralLogTerm, RationalTerm
+from .terms import (
+    RationalIntegralGeneralTerm,
+    RationalIntegralLogTerm,
+    RationalTerm,
+    RationalIntegralArctanTerm,
+    RationalIntegralLogPairTerm,
+)
 import numpy as np
 from numpy.typing import ArrayLike
 from numpy.polynomial import Polynomial
 from rational_functions.utils import as_polynomial, PolynomialDef
+
+
+def _int_cconj_pair(
+    a1: complex, a2: complex, r: complex
+) -> list[RationalIntegralGeneralTerm]:
+    """Calculate the integral of a conjugate pair of complex poles.
+
+    Args:
+        a1 (complex): Coefficient for the first term.
+        a2 (complex): Coefficient for the second term.
+        r (complex): Pole for the first term; the second term is its conjugate.
+
+    Returns:
+        tuple[RationalIntegralLogPairTerm, RationalIntegralArctanTerm]: Integral terms for the conjugate pair.
+    """
+
+    out_terms: list[RationalIntegralGeneralTerm] = []
+
+    c1 = a1 + a2
+    if c1 != 0.0:
+        out_terms.append(RationalIntegralLogPairTerm(c1, r))
+    c2 = 1.0j * (a1 - a2) * np.imag(r)
+    if c2 != 0.0:
+        out_terms.append(RationalIntegralArctanTerm(c2, r))
+
+    return out_terms
 
 
 class RationalFunctionIntegral:
