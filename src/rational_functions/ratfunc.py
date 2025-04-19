@@ -507,6 +507,55 @@ class RationalFunction:
         return cls(rterms, poly)
 
     @classmethod
+    def from_roots_and_poles(
+        cls,
+        roots: list[PolynomialRoot],
+        poles: list[PolynomialRoot],
+    ) -> "RationalFunction":
+        """Construct a RationalFunction from a list of roots
+        for the numerator and a list of poles for the denominator.
+
+        Args:
+            roots (list[PolynomialRoot]): Roots of the numerator.
+            poles (list[PolynomialRoot]): Poles of the denominator.
+
+        Returns:
+            RationalFunction: Rational function object.
+        """
+
+        # Build the list of roots
+        root_list: list[complex] = np.concatenate(
+            [[r.value] * r.multiplicity for r in roots]
+        )
+
+        return cls.from_poles(
+            Polynomial.fromroots(root_list),
+            poles,
+        )
+
+    @classmethod
+    def cauchy(cls, x0: float, w: float) -> "RationalFunction":
+        """Construct a Cauchy distribution rational function,
+        normalized to 1:
+
+        $$
+            R(x) = \frac{1}{\pi w} \frac{1}{(x-x_0)^2 + w^2}
+        $$
+
+        Args:
+            x0 (float): Location parameter.
+            w (float): Scale parameter.
+
+        Returns:
+            RationalFunction: Cauchy distribution rational function.
+        """
+
+        r = x0 + 1.0j * w
+        a = -0.5j / (np.pi * w**2)
+
+        return RationalFunction([RationalTerm(r, a), RationalTerm(r.conjugate(), -a)])
+
+    @classmethod
     def set_approximation_options(
         cls,
         atol: float | None = None,
