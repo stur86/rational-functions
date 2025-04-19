@@ -37,8 +37,3 @@ Working in this representation makes a real difference in accuracy compared to t
 ![](precision.png)
 
 You can find the code that generates this plot in the `/examples` folder of the repository.
-
-<!-- :::rational_functions.ratfunc.RationalFunction
-    options:
-        show_root_heading: true
-        show_root_full_path: false -->

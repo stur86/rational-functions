@@ -337,7 +337,7 @@ def test_rfunc_deriv(rf: RationalFunction, m: int) -> None:
     assert np.allclose(y0[m:-m], y1[m:-m], rtol=5e-3)
 
 
-@pytest.mark.parametrize("rf", _test_ratfuncs[2:3])
+@pytest.mark.parametrize("rf", _test_ratfuncs)
 def test_rfunc_integ(rf: RationalFunction) -> None:
     """Test integral of a rational function."""
     x = np.linspace(-1, 1, 10000)
@@ -348,6 +348,11 @@ def test_rfunc_integ(rf: RationalFunction) -> None:
     high_ord = all(term.order > 1 for term in rf._terms)
     if high_ord:
         assert isinstance(i1, RationalFunction)
+
+        # Try forcing the integral to be a RationalFunctionIntegral
+        with pytest.warns(UserWarning, match="All terms are RationalTerms"):
+            iforce = rf.integ(force_iobj=True)
+        assert isinstance(iforce, RationalFunctionIntegral)
     else:
         assert isinstance(i1, RationalFunctionIntegral)
 

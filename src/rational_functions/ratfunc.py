@@ -352,8 +352,13 @@ class RationalFunction:
 
         return RationalFunction(diff_terms, diff_poly)
 
-    def integ(self) -> Union[RationalFunctionIntegral, "RationalFunction"]:
+    def integ(
+        self, force_iobj: bool = False
+    ) -> Union[RationalFunctionIntegral, "RationalFunction"]:
         """Integrate the rational function.
+
+        Args:
+            force_iobj (bool, optional): Force the integral to be a RationalFunctionIntegral object.
 
         Returns:
             Union[RationalFunctionIntegral, RationalFunction]: Integral of the rational function.
@@ -365,7 +370,9 @@ class RationalFunction:
         int_terms = _integrate_terms(self._terms, atol=atol, rtol=rtol)
         int_poly = self._poly.integ()
         # Check if all terms are RationalTerms
-        if all(isinstance(term, RationalTerm) for term in int_terms):
+        if (not force_iobj) and all(
+            isinstance(term, RationalTerm) for term in int_terms
+        ):
             # If all terms are RationalTerms, return a RationalFunction
             return RationalFunction(int_terms, int_poly)
 
@@ -536,7 +543,7 @@ class RationalFunction:
 
     @classmethod
     def cauchy(cls, x0: float, w: float) -> "RationalFunction":
-        """Construct a Cauchy distribution rational function,
+        r"""Construct a Cauchy distribution rational function,
         normalized to 1:
 
         $$
