@@ -15,18 +15,18 @@ RationalIntegralGeneralTerm = Union["RationalIntegralTermBase", "RationalTerm"]
 
 class RationalTerm:
     """A single term in a proper rational function,
-    corresponding to a single real or complex pole r of order k in the
+    corresponding to a single real or complex pole r of order m in the
     denominator, taking the form
 
     $$
-    R(x) = \\frac{c}{(x-r)^k}
+    R(x) = \\frac{c}{(x-r)^m}
     $$
 
     """
 
     _r: complex
     _c: complex
-    _k: int
+    _m: int
 
     def __init__(self, pole: complex, coef: complex, order: int = 1):
         """Create a new RationalTermSingle instance.
@@ -46,21 +46,21 @@ class RationalTerm:
 
         self._r = pole
         self._c = coef
-        self._k = order
+        self._m = order
 
     def __neg__(self) -> "RationalTerm":
         """Negate the term."""
-        return self.__class__(self._r, -self._c, self._k)
+        return self.__class__(self._r, -self._c, self._m)
 
     def __eq__(self, other: object) -> bool:
         """Check if two terms are equal."""
         if not isinstance(other, RationalTerm):
             return False
-        return self._r == other._r and self._c == other._c and self._k == other._k
+        return self._r == other._r and self._c == other._c and self._m == other._m
 
     def __hash__(self) -> int:
         """Hash the term."""
-        return hash((self._r, self._c, self._k))
+        return hash((self._r, self._c, self._m))
 
     @property
     def pole(self) -> complex:
@@ -75,17 +75,17 @@ class RationalTerm:
     @property
     def order(self) -> int:
         """Return the order of the term."""
-        return self._k
+        return self._m
 
     @property
     def denominator_root(self) -> PolynomialRoot:
         """Return the root of the denominator."""
-        return PolynomialRoot(self._r, self._k)
+        return PolynomialRoot(self._r, self._m)
 
     @property
     def denominator(self) -> Polynomial:
         """Return the denominator of the term."""
-        return Polynomial([-self._r, 1.0]) ** self._k
+        return Polynomial([-self._r, 1.0]) ** self._m
 
     @staticmethod
     def product(term1: "RationalTerm", term2: "RationalTerm") -> list["RationalTerm"]:
@@ -108,11 +108,11 @@ class RationalTerm:
                 RationalTerm(
                     r1,
                     term1._c * term2._c,
-                    order=term1._k + term2._k,
+                    order=term1._m + term2._m,
                 )
             ]
 
-        roots = [PolynomialRoot(r1, term1._k), PolynomialRoot(r2, term2._k)]
+        roots = [PolynomialRoot(r1, term1._m), PolynomialRoot(r2, term2._m)]
         return partial_frac_decomposition([term1.coef * term2.coef], roots)
 
     @staticmethod

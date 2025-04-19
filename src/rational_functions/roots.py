@@ -10,15 +10,7 @@ PolyDefType = ArrayLike | Polynomial
 
 @dataclass(frozen=True)
 class PolynomialRoot:
-    """Defines a polynomial root with value, multiplicity,
-    and supports complex conjugate pairs of roots.
-
-    Note:
-        For complex pair roots, the multiplicity refers to the
-        multiplicity of each individual root. For example, the roots of the
-        polynomial $x^2+1$ would be described by a single `PolynomialRoot`
-        object with value $i$ (or equivalently, $-i$) and multiplicity 1.
-    """
+    """Defines a polynomial root with value and multiplicity."""
 
     value: complex
     multiplicity: int = 1
