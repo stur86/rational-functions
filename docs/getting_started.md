@@ -57,7 +57,7 @@ print(R)
 
 The arguments to the `RationalTerm` are the value of the pole, the coefficient at the numerator, and the order.
 
-For more constructors, see [the API][rational_functions.ratfunc.RationalFunction]
+For more constructors, see [the class's API][rational_functions.ratfunc.RationalFunction]
 
 ### Using rational functions
 
@@ -110,4 +110,4 @@ Rinv = R**(-1)
 
 Like NumPy's `Polynomial` class, `RationalFunction` implements `.deriv()` and `.integ()` methods. While `.deriv()` works exactly as in the `Polynomial` class, `.integ()` is more problematic because there is no guarantee that the integral of a rational function is, itself, a rational function.
 
-Instead, generally speaking `.integ()` can return either a `RationalFunction` or a `RationalFunctionIntegral` object. The latter can still be evaluated by calling it, but it does not support further integration, differentiation, or other operations. When using `.integ()`, you should be ready to check for the return type, unless you use the dedicated argument to force the return type to be a `RationalFunctionIntegral`. See [the documentation][rational_functions.ratfunc.RationalFunction.integ] for more details.
+Instead, generally speaking `.integ()` can return either a `RationalFunction` or a `RationalFunctionIntegral` object. The latter can still be evaluated by calling it, but it does not support further integration, differentiation, or other operations. When using `.integ()`, you should be ready to check for the return type, unless you use the dedicated argument to force the return type to be a `RationalFunctionIntegral`. See also [the method's documentation][rational_functions.ratfunc.RationalFunction.integ].

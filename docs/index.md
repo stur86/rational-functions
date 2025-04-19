@@ -25,10 +25,10 @@ However, there is a downside to this representation. When computing with floatin
 Fortunately, there are other ways to represent a rational function. A common one is known as the partial fractions decomposition:
 
 $$
-R(x) = p(x) + \sum_{i=1}^N \sum_{m=1}^{K_i} \frac{a_i^{(m)}}{(x-r_i)^m}
+R(x) = p(x) + \sum_{i=1}^N \sum_{m=1}^{K_i} \frac{c_i^{(m)}}{(x-r_i)^m}
 $$
 
-Here $p(x)$ is the quotient of the polynomial division $P(x)/Q(x)$, which is non-zero only if the degree of $P$ is equal or greater than the degree of $Q$ (in other words, if the rational function is *improper*). The terms $r_i$ are the roots (real or complex) of $Q$, $K_i$ their multiplicities and $a_i^{(m)}$ some constant coefficients (again, real or complex).
+Here $p(x)$ is the quotient of the polynomial division $P(x)/Q(x)$, which is non-zero only if the degree of $P$ is equal or greater than the degree of $Q$ (in other words, if the rational function is *improper*). The terms $r_i$ are the roots (real or complex) of $Q$, $K_i$ their multiplicities and $c_i^{(m)}$ some constant coefficients (again, real or complex).
 
 This representation is particularly convenient for integration, because when the rational function is represented in this way, each individual term is easily integrable. Notice that often when studying calculus you'll find a distinction between these terms and terms that take the form $1/(w+(x-x_0)^2)$, but that's not important here - those terms really emerge just from the sum of two simpler terms with complex conjugate roots, so we prefer a unified representation for now.
 
