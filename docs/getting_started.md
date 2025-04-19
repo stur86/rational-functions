@@ -10,6 +10,8 @@ pip install rational-functions
 
 ## Usage
 
+### Creating rational functions
+
 Import the `RationalFunction` class.
 
 ```py
@@ -52,3 +54,7 @@ print(R)
 ```
 1.0 - 2.0·x + 1.0·x² + ((-5+0j) + (2+2j)·x + (1+0j)·x²)/((2+0j) - (1+4j)·x - (2-2j)·x² + (1+0j)·x³)
 ```
+
+The arguments to the `RationalTerm` are the value of the pole, the coefficient at the numerator, and the order.
+
+Another more direct way of building a rational function
