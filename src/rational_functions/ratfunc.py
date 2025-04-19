@@ -475,7 +475,7 @@ class RationalFunction:
         cls,
         numerator: PolynomialDef,
         poles: list[PolynomialRoot],
-    ) -> None:
+    ) -> "RationalFunction":
         """Construct a RationalFunction from a list of poles
         and a numerator polynomial. This method is more efficient
         and numerically stable than using the from_fraction
@@ -502,8 +502,9 @@ class RationalFunction:
         poly_rem = numerator % denominator
         rterms = partial_frac_decomposition(
             poly_rem.coef,
-            poles,
+            lcm.roots,
         )
+
         return cls(rterms, poly)
 
     @classmethod
@@ -549,6 +550,10 @@ class RationalFunction:
         Returns:
             RationalFunction: Cauchy distribution rational function.
         """
+
+        assert np.isreal(x0), "x0 must be real"
+        assert np.isreal(w), "w must be real"
+        assert w > 0, "w must be positive"
 
         r = x0 + 1.0j * w
         a = -0.5j / (np.pi * w**2)
