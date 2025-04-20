@@ -24,7 +24,7 @@ concurrency:
 jobs:
   # Build the page using Vite
   build-and-deploy:
-    name: Build and deploy demo page
+    name: Build and deploy documentation
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
