@@ -88,7 +88,9 @@ class RationalTerm:
         return Polynomial([-self._r, 1.0]) ** self._m
 
     @staticmethod
-    def product(term1: "RationalTerm", term2: "RationalTerm") -> list["RationalTerm"]:
+    def product(
+        term1: "RationalTerm", term2: "RationalTerm", ztol: float = 0.0
+    ) -> list["RationalTerm"]:
         """Compute and decompose the product of two rational terms. This method
         is not implemented as an overloaded operator __mul__ since the output is
         not a RationalTerm but a list of RationalTerms.
@@ -96,6 +98,9 @@ class RationalTerm:
         Args:
             term1 (RationalTerm): First term
             term2 (RationalTerm | Polynomial): Second term
+            ztol (float): Absolute tolerance under which real or
+                imaginary parts of the solution are considered zero.
+                Defaults to 0.0.
         Returns:
             list[RationalTerm]: List of terms in the product
         """
@@ -113,11 +118,11 @@ class RationalTerm:
             ]
 
         roots = [PolynomialRoot(r1, term1._m), PolynomialRoot(r2, term2._m)]
-        return partial_frac_decomposition([term1.coef * term2.coef], roots)
+        return partial_frac_decomposition([term1.coef * term2.coef], roots, ztol=ztol)
 
     @staticmethod
     def product_w_polynomial(
-        term: "RationalTerm", poly: Polynomial
+        term: "RationalTerm", poly: Polynomial, ztol: float = 0.0
     ) -> tuple[list["RationalTerm"], Polynomial]:
         """Compute and decompose the product of a rational term and a polynomial.
         This method is not implemented as an overloaded operator __mul__ since the output is
@@ -126,6 +131,9 @@ class RationalTerm:
         Args:
             term (RationalTerm): Rational term
             poly (Polynomial): Polynomial to multiply with
+            ztol (float): Absolute tolerance under which real or
+                imaginary parts of the solution are considered zero.
+                Defaults to 0.0.
 
         Returns:
             tuple[list[RationalTerm], Polynomial]: List of terms in the product and the remaining polynomial
@@ -138,7 +146,7 @@ class RationalTerm:
         poly_rem = num % den
 
         terms = partial_frac_decomposition(
-            poly_rem.coef, [PolynomialRoot(term.pole, term.order)]
+            poly_rem.coef, [PolynomialRoot(term.pole, term.order)], ztol=ztol
         )
 
         return terms, poly_out

@@ -38,7 +38,7 @@ class RationalFunction:
     class ApproximationOptions:
         atol: float = 0.0
         rtol: float = 0.0
-        imtol: float = 0.0
+        ztol: float = 0.0
 
     __approx_opts: ApproximationOptions = ApproximationOptions()
 
@@ -48,7 +48,7 @@ class RationalFunction:
         poly: PolynomialDef | None = None,
         atol: float | None = None,
         rtol: float | None = None,
-        imtol: float | None = None,
+        ztol: float | None = None,
     ) -> None:
         """Initialize the rational function. Terms with very close poles or
         near-zero coefficients will be grouped together and simplified
@@ -60,13 +60,13 @@ class RationalFunction:
             poly (Polynomial, optional): Residual polynomial. Defaults to None.
             atol (float, optional): Absolute tolerance for root equivalence. Defaults to None.
             rtol (float, optional): Relative tolerance for root equivalence. Defaults to None.
-            imtol (float, optional): Tolerance for imaginary part of roots to be considered
-                zero. Defaults to None.
+            ztol (float, optional): Absolute tolerance below which imaginary or real part of
+                roots will be approximated to zero. Defaults to None.
         """
 
         atol = atol if atol is not None else self.__approx_opts.atol
         rtol = rtol if rtol is not None else self.__approx_opts.rtol
-        imtol = imtol if imtol is not None else self.__approx_opts.imtol
+        ztol = ztol if ztol is not None else self.__approx_opts.ztol
 
         self._terms = RationalTerm.simplify(terms, atol, rtol)
         self._lcm = RootLCM([term.denominator_root for term in self._terms])
@@ -199,6 +199,8 @@ class RationalFunction:
         other_terms: list[RationalTerm] = []
         is_other_ratfunc = isinstance(other, RationalFunction)
 
+        ztol = self.__approx_opts.ztol
+
         if is_other_ratfunc:
             other_poly = other._poly
             other_terms = list(other._terms)
@@ -215,20 +217,24 @@ class RationalFunction:
 
         for term in self._terms:
             # Multiply the term by the other polynomial
-            new_terms, new_poly = RationalTerm.product_w_polynomial(term, other_poly)
+            new_terms, new_poly = RationalTerm.product_w_polynomial(
+                term, other_poly, ztol=ztol
+            )
             mul_terms.extend(new_terms)
             mul_poly += new_poly
 
         for term in other_terms:
             # Multiply the term by the other polynomial
-            new_terms, new_poly = RationalTerm.product_w_polynomial(term, self._poly)
+            new_terms, new_poly = RationalTerm.product_w_polynomial(
+                term, self._poly, ztol=ztol
+            )
             mul_terms.extend(new_terms)
             mul_poly += new_poly
 
         # Term-term multiplication
         for term1 in self._terms:
             for term2 in other_terms:
-                new_terms = RationalTerm.product(term1, term2)
+                new_terms = RationalTerm.product(term1, term2, ztol=ztol)
                 mul_terms.extend(new_terms)
 
         return RationalFunction(mul_terms, mul_poly)
@@ -274,7 +280,7 @@ class RationalFunction:
                 other,
                 atol=self.__approx_opts.atol,
                 rtol=self.__approx_opts.rtol,
-                imtol=self.__approx_opts.imtol,
+                ztol=self.__approx_opts.ztol,
             )
             return RationalFunction.from_poles(numerator, den_poles)
         elif np.isscalar(other):
@@ -423,7 +429,7 @@ class RationalFunction:
         denominator: PolynomialDef,
         atol: float | None = None,
         rtol: float | None = None,
-        imtol: float | None = None,
+        ztol: float | None = None,
     ) -> "RationalFunction":
         """Construct a RationalFunction from a fraction of two
         polynomials.
@@ -440,8 +446,8 @@ class RationalFunction:
             denominator (Polynomial | ArrayLike): Denominator polynomial, or series of coefficients in increasing order.
             atol (float, optional): Absolute tolerance for root equivalence. Defaults to None (use global setting).
             rtol (float, optional): Relative tolerance for root equivalence. Defaults to None (use global setting).
-            imtol (float, optional): Tolerance for imaginary part of roots to be considered
-                zero. Defaults to None (use global setting).
+            ztol (float, optional): Absolute tolerance below which imaginary or real part of
+                roots will be approximated to zero. Defaults to None (use global setting).
 
         Returns:
             RationalFunction: Rational function object.
@@ -458,7 +464,7 @@ class RationalFunction:
 
         atol = atol if atol is not None else cls.__approx_opts.atol
         rtol = rtol if rtol is not None else cls.__approx_opts.rtol
-        imtol = imtol if imtol is not None else cls.__approx_opts.imtol
+        ztol = ztol if ztol is not None else cls.__approx_opts.ztol
 
         # Polynomial part
         poly_quot = numerator // denominator
@@ -469,11 +475,8 @@ class RationalFunction:
         if denominator.degree() == 0:
             # No roots, return polynomial part
             return cls([], poly_quot)
-        den_roots = catalogue_roots(denominator, atol=atol, rtol=rtol, imtol=imtol)
-        rterms = partial_frac_decomposition(
-            poly_rem.coef,
-            den_roots,
-        )
+        den_roots = catalogue_roots(denominator, atol=atol, rtol=rtol, ztol=ztol)
+        rterms = partial_frac_decomposition(poly_rem.coef, den_roots, ztol=ztol)
 
         return cls(rterms, poly_quot)
 
@@ -482,6 +485,7 @@ class RationalFunction:
         cls,
         numerator: PolynomialDef,
         poles: list[PolynomialRoot],
+        ztol: float | None = None,
     ) -> "RationalFunction":
         """Construct a RationalFunction from a list of poles
         and a numerator polynomial. This method is more efficient
@@ -496,6 +500,8 @@ class RationalFunction:
         Args:
             numerator (Polynomial): Numerator polynomial.
             poles (list[PolynomialRoot]): Poles of the rational function.
+            ztol (float, optional): Absolute tolerance below which imaginary or real part of
+                roots will be approximated to zero. Defaults to None (use global setting).
 
         Returns:
             RationalFunction: Rational function object.
@@ -503,14 +509,13 @@ class RationalFunction:
 
         numerator = as_polynomial(numerator)
 
+        ztol = ztol if ztol is not None else cls.__approx_opts.ztol
+
         lcm = RootLCM(poles)
         denominator = lcm.polynomial
         poly = numerator // denominator
         poly_rem = numerator % denominator
-        rterms = partial_frac_decomposition(
-            poly_rem.coef,
-            lcm.roots,
-        )
+        rterms = partial_frac_decomposition(poly_rem.coef, lcm.roots, ztol=ztol)
 
         return cls(rterms, poly)
 
@@ -519,6 +524,7 @@ class RationalFunction:
         cls,
         roots: list[PolynomialRoot],
         poles: list[PolynomialRoot],
+        ztol: float | None = None,
     ) -> "RationalFunction":
         """Construct a RationalFunction from a list of roots
         for the numerator and a list of poles for the denominator.
@@ -526,6 +532,8 @@ class RationalFunction:
         Args:
             roots (list[PolynomialRoot]): Roots of the numerator.
             poles (list[PolynomialRoot]): Poles of the denominator.
+            ztol (float, optional): Absolute tolerance below which imaginary or real part of
+                roots will be approximated to zero. Defaults to None (use global setting).
 
         Returns:
             RationalFunction: Rational function object.
@@ -536,10 +544,7 @@ class RationalFunction:
             [[r.value] * r.multiplicity for r in roots]
         )
 
-        return cls.from_poles(
-            Polynomial.fromroots(root_list),
-            poles,
-        )
+        return cls.from_poles(Polynomial.fromroots(root_list), poles, ztol=ztol)
 
     @classmethod
     def cauchy(cls, x0: float, w: float) -> "RationalFunction":
@@ -593,7 +598,7 @@ class RationalFunction:
         if rtol is not None:
             cls.__approx_opts.rtol = rtol
         if imtol is not None:
-            cls.__approx_opts.imtol = imtol
+            cls.__approx_opts.ztol = imtol
 
 
 __all__ = ["RationalFunction"]

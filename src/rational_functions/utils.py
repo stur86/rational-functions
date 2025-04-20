@@ -64,3 +64,10 @@ def group_by_closeness(
         grouped_dict[key_value] = list([data[i] for i in group])
 
     return grouped_dict
+
+
+def round_to_zero(x: ArrayLike, tol: float) -> ArrayLike:
+    x = np.where(np.abs(x.real) < tol, 0.0, x.real) + np.where(
+        np.abs(x.imag) < tol, 0.0, x.imag * 1j
+    )
+    return x

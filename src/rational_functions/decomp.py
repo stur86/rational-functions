@@ -4,6 +4,7 @@ import numpy as np
 from numpy.polynomial import Polynomial
 from numpy.typing import NDArray
 from .roots import PolynomialRoot
+from .utils import round_to_zero
 import typing
 
 if typing.TYPE_CHECKING:
@@ -11,16 +12,17 @@ if typing.TYPE_CHECKING:
 
 
 def catalogue_roots(
-    p: Polynomial, atol: float = 1e-8, rtol: float = 1e-5, imtol: float = 1e-13
+    p: Polynomial, atol: float = 1e-8, rtol: float = 1e-5, ztol: float = 1e-13
 ) -> list[PolynomialRoot]:
     """Extract the roots of a polynomial and group them
     into PolynomialRoot objects.
 
     Args:
         p (Polynomial): Input polynomial.
-        atol (float): Absolute tolerance for root comparison.
-        rtol (float): Relative tolerance for root comparison.
-        imtol (float): Absolute tolerance under which imaginary parts are considered zero.
+        atol (float): Absolute tolerance for root comparison. Default is 1e-8.
+        rtol (float): Relative tolerance for root comparison. Default is 1e-5.
+        ztol (float): Absolute tolerance under which real or
+            imaginary parts are considered zero. Default is 1e-13.
 
     Returns:
         list[PolynomialRoot]: List of PolynomialRoot objects.
@@ -39,7 +41,7 @@ def catalogue_roots(
 
     roots = p.roots()
     # Filter out complex roots with small imaginary parts
-    roots = np.where(np.abs(np.imag(roots)) < imtol, np.real(roots), roots)
+    roots = np.where(np.abs(np.imag(roots)) < ztol, np.real(roots), roots)
 
     # Find unique roots
     roots_mults: list[tuple[complex, int]] = []
@@ -53,24 +55,27 @@ def catalogue_roots(
         mult = int(np.sum(r_map))
         # Remove all occurrences of the root
         extracted[r_map] = True
-        r_val = np.mean(roots[r_map])
-        if abs(r_val.imag) < imtol:
-            r_val = float(r_val.real)
-        else:
-            r_val = complex(r_val)
+        r_val = np.mean(roots[r_map]).astype(np.complex128)
+        # Round to zero if close enough
+        r_val = round_to_zero(r_val, ztol)
+
         roots_mults.append((r_val, mult))
 
     return list([PolynomialRoot(r, m) for r, m in roots_mults])
 
 
 def partial_frac_decomposition(
-    num_coef: NDArray[np.number], denominator_roots: list[PolynomialRoot]
+    num_coef: NDArray[np.number],
+    denominator_roots: list[PolynomialRoot],
+    ztol: float = 1e-13,
 ) -> list["RationalTerm"]:
     """Perform a partial fraction decomposition of a rational function.
 
     Args:
         num_coef (NDArray[np.number]): Coefficients of the numerator of the rational function.
         denominator_roots (list[PolynomialRoot]): Roots of the denominator polynomial.
+        ztol (float): Absolute tolerance under which real or
+            imaginary parts of the solution are considered zero. Default is 1e-13.
 
     Returns:
         list[tuple[PolynomialRoot, ArrayLike]]: List of partial fraction terms as root corresponding to the term
@@ -108,6 +113,7 @@ def partial_frac_decomposition(
 
     # Solving gives us the corresponding coefficients of the partial fractions
     x = np.linalg.solve(M, y)
+    x = round_to_zero(x, ztol)
 
     m_i = 0
     terms: list[RationalTerm] = []
