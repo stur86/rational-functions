@@ -3,6 +3,7 @@ name = "rational-functions"
 version = "0.1.0"
 description = "Add your description here"
 readme = "README.md"
+urls = { "GitHub" = "https://github.com/stur86/rational-functions", "Documentation" = "https://stur86.github.io/rational-functions/"}
 requires-python = ">=3.12"
 dependencies = [
     "numpy>=2.2.4",
