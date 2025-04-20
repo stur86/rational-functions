@@ -6,7 +6,7 @@ A Numpy-based Python package for the manipulation of rational functions.
 
 Install with:
 
-```py
+```bash
 pip install rational-functions
 ```
 
