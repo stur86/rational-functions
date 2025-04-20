@@ -28,6 +28,8 @@ The package uses UV as its package manager, [refer to their documentation](https
 
 After having the environment set up I recommend using the pre-commit hooks:
 
-`pre-commit install`
+```bash
+pre-commit install
+```
 
 You can also use Ruff and Black to clean up your code by using `uv run task lint` and `uv run task format`.
