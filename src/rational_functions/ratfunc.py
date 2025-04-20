@@ -269,6 +269,9 @@ class RationalFunction:
             return RationalFunction.from_fraction(
                 numerator,
                 denominator,
+                atol=self.__approx_opts.atol,
+                rtol=self.__approx_opts.rtol,
+                ztol=self.__approx_opts.ztol,
             )
         elif isinstance(other, Polynomial):
             # We must divide by the highest order coefficience since the
@@ -282,7 +285,9 @@ class RationalFunction:
                 rtol=self.__approx_opts.rtol,
                 ztol=self.__approx_opts.ztol,
             )
-            return RationalFunction.from_poles(numerator, den_poles)
+            return RationalFunction.from_poles(
+                numerator, den_poles, ztol=self.__approx_opts.ztol
+            )
         elif np.isscalar(other):
             # Divide each term by the scalar
             new_poly = self._poly / other
@@ -318,12 +323,23 @@ class RationalFunction:
             ans = ans * self
         return ans
 
-    def reciprocal(self) -> "RationalFunction":
+    def reciprocal(
+        self,
+        atol: float | None = None,
+        rtol: float | None = None,
+        ztol: float | None = None,
+    ) -> "RationalFunction":
         r"""Get the reciprocal of the rational function.
 
         $$
         R(x) = \frac{P(x)}{Q(x)} \implies R^{-1}(x) = \frac{Q(x)}{P(x)}
         $$
+
+        Args:
+            atol (float | None, optional): Absolute tolerance for root equivalence. Defaults to None.
+            rtol (float | None, optional): Relative tolerance for root equivalence. Defaults to None.
+            ztol (float | None, optional): Absolute tolerance below which imaginary or real part of
+                roots will be approximated to zero. Defaults to None.
 
         Returns:
             RationalFunction: Inverse of the rational function.
@@ -331,9 +347,12 @@ class RationalFunction:
         numerator = self.denominator
         denominator = self.numerator + self._poly * numerator
 
+        atol = atol if atol is not None else self.__approx_opts.atol
+        rtol = rtol if rtol is not None else self.__approx_opts.rtol
+        ztol = ztol if ztol is not None else self.__approx_opts.ztol
+
         return RationalFunction.from_fraction(
-            numerator,
-            denominator,
+            numerator, denominator, atol=atol, rtol=rtol, ztol=ztol
         )
 
     def deriv(self, m: int = 1) -> "RationalFunction":
@@ -577,7 +596,7 @@ class RationalFunction:
         cls,
         atol: float | None = None,
         rtol: float | None = None,
-        imtol: float | None = None,
+        ztol: float | None = None,
     ) -> None:
         """Set the approximation options for the rational function.
         They control how the poles of a rational function are grouped
@@ -589,16 +608,16 @@ class RationalFunction:
         Args:
             atol (float | None, optional): Absolute tolerance to consider two poles identical. Defaults to None.
             rtol (float | None, optional): Relative tolerance to consider two poles identical. Defaults to None.
-            imtol (float | None, optional): Tolerance on a non-zero imaginary part to approximate it as
-                zero. Defaults to None.
+            ztol (float | None, optional): Absolute tolerance below which imaginary or real part of
+                values will be approximated to zero. Defaults to None.
         """
 
         if atol is not None:
             cls.__approx_opts.atol = atol
         if rtol is not None:
             cls.__approx_opts.rtol = rtol
-        if imtol is not None:
-            cls.__approx_opts.ztol = imtol
+        if ztol is not None:
+            cls.__approx_opts.ztol = ztol
 
 
 __all__ = ["RationalFunction"]
