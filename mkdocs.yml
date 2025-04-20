@@ -9,10 +9,11 @@ theme:
 nav:
   - Home: index.md
   - Getting started: getting_started.md
+  - Numerical accuracy: numerical_accuracy.md
   - API:
+    - Polynomial Root: api/polyroot.md
     - Rational Term: api/term.md
     - Rational Function: api/ratfunc.md
-    - Polynomial Root: api/polyroot.md
 plugins:
   - search
   - mkdocstrings:
