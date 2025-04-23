@@ -473,8 +473,8 @@ class RationalFunction:
         """
 
         # Cast to polynomial
-        numerator = as_polynomial(numerator)
-        denominator = as_polynomial(denominator)
+        numerator = as_polynomial(numerator).convert()
+        denominator = as_polynomial(denominator).convert()
 
         # Make denominator monic
         c = denominator.coef[-1]
