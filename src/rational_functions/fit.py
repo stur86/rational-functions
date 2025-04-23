@@ -27,6 +27,14 @@ def fit_ratfun_leastsq(
         tuple[Polynomial, Polynomial]: Numerator and denominator polynomials
     """
 
+    if m < 0 or n < 0:
+        raise ValueError(
+            "Degrees of numerator and denominator polynomials must be non-negative"
+        )
+
+    if len(x) != len(y):
+        raise ValueError("x and y must have the same length")
+
     # Construct Vandermonde matrices
     N = np.vander(x, m + 1, increasing=True)
     D = np.vander(x, n + 1, increasing=True)
