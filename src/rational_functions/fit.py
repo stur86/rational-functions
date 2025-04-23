@@ -35,6 +35,13 @@ def fit_ratfun_leastsq(
     if len(x) != len(y):
         raise ValueError("x and y must have the same length")
 
+    # Rescale x to (-1, 1)
+    xl, xr = np.min(x), np.max(x)
+    c = (xl + xr) / 2
+    d = (xr - xl) / 2
+    c, d = 1, 1
+    x = (x - c) / d
+
     # Construct Vandermonde matrices
     N = np.vander(x, m + 1, increasing=True)
     D = np.vander(x, n + 1, increasing=True)
@@ -54,4 +61,9 @@ def fit_ratfun_leastsq(
     # \alpha solution
     alpha = AB @ beta
 
-    return Polynomial(alpha), Polynomial(beta)
+    num = Polynomial(alpha)
+    den = Polynomial(beta)
+
+    # Rescale back to original x
+    t = Polynomial([-c / d, 1 / d])
+    return num(t), den(t)
