@@ -4,7 +4,7 @@ version = "0.1.1"
 description = "A Python library for working with rational functions."
 readme = "README.md"
 urls = { "GitHub" = "https://github.com/stur86/rational-functions", "Documentation" = "https://stur86.github.io/rational-functions/"}
-requires-python = ">=3.12"
+requires-python = ">=3.10"
 dependencies = [
     "numpy>=2.2.4",
 ]
@@ -18,6 +18,8 @@ keywords = [
 ]
 classifiers = [
     "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
