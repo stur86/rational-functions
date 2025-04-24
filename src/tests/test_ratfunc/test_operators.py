@@ -71,6 +71,7 @@ _test_ratfunc_pairs = self_product_w_o_duplicates(_test_ratfuncs)
 _test_polynomials = [
     Polynomial([1.0]),
     Polynomial([2.0, 3.0]),
+    Polynomial([2.0, 3.0], domain=(0, 3)),
     Polynomial([3.0, 4.0, 5.0]),
 ]
 _test_scalars = [1.0, 2.0, -1.0, -0.35, 2.2j, 3.0 + 1.0j]

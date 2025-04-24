@@ -10,6 +10,7 @@ from rational_functions.decomp import catalogue_roots
     "num, den",
     [
         (Polynomial([1.0, 2.0]), Polynomial.fromroots([2.0, 4.0])),
+        (Polynomial([1.0, 2.0], domain=(0, 3)), Polynomial.fromroots([2.0, 4.0])),
         (Polynomial([1.0, 2.0]), Polynomial.fromroots([2.0, 4.0, 5.0])),
         (Polynomial([1.0, 2.0]), Polynomial([1.0, 2.0])),
         (Polynomial([1.0]), Polynomial.fromroots([-2.0, 4.0])),
@@ -31,29 +32,14 @@ def test_ratfunc_from_frac(num: Polynomial, den: Polynomial):
     assert ratfunc._poly == num // den
 
 
-def test_ratfunc_from_frac_w_domain():
-    """Test the creation of a rational function from a fraction when polynomials
-    have non-identical domain and window combinations"""
-
-    num = Polynomial([-2, 1], domain=(0, 4), window=(-1, 1))
-    den = Polynomial([1, -3, 1], domain=(-2, 1), window=(-1, 1))
-
-    ratfunc = RationalFunction.from_fraction(num, den)
-
-    assert isinstance(ratfunc, RationalFunction)
-
-    x = np.linspace(-1, 1, 100)
-
-    y1 = ratfunc(x)
-    y2 = num(x) / den(x)
-
-    assert np.allclose(y1, y2)
-
-
 @pytest.mark.parametrize(
     "num, poles",
     [
         (Polynomial([1.0, 2.0]), [PolynomialRoot(2.0), PolynomialRoot(4.0)]),
+        (
+            Polynomial([1.0, 2.0], domain=(0, 3)),
+            [PolynomialRoot(2.0), PolynomialRoot(4.0)],
+        ),
         (Polynomial([1.0, 2.0]), [PolynomialRoot(2.0), PolynomialRoot(4.0, 2)]),
         (
             Polynomial([1.0, 2.0]),
@@ -72,6 +58,17 @@ def test_ratfunc_from_poles(num: Polynomial, poles: list[PolynomialRoot]):
     for i, p in enumerate(sorted(poles, key=lambda r: (r.real, r.imag))):
         assert np.isclose(droots[i].value, p.value)
         assert droots[i].multiplicity == p.multiplicity
+
+    # Build the denominator polynomial from the roots
+    den = Polynomial.fromroots(
+        np.concatenate([[r.value] * r.multiplicity for r in poles])
+    )
+
+    x = np.linspace(-1, 1, 100)
+    y1 = rf(x)
+    y2 = num(x) / den(x)
+
+    assert np.allclose(y1, y2)
 
 
 @pytest.mark.parametrize(
