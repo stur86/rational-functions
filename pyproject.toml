@@ -1,12 +1,32 @@
 [project]
 name = "rational-functions"
-version = "0.1.0"
-description = "Add your description here"
+version = "0.1.1"
+description = "A Python library for working with rational functions."
 readme = "README.md"
 urls = { "GitHub" = "https://github.com/stur86/rational-functions", "Documentation" = "https://stur86.github.io/rational-functions/"}
 requires-python = ">=3.12"
 dependencies = [
     "numpy>=2.2.4",
+]
+keywords = [
+    "rational functions",
+    "polynomials",
+    "mathematics",
+    "algebra",
+    "python library",
+    "numpy",
+]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.12",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Science/Research",
+    "Natural Language :: English",
+    "Topic :: Scientific/Engineering :: Mathematics",
+    "Topic :: Scientific/Engineering :: Information Analysis"
 ]
 
 [project.scripts]
