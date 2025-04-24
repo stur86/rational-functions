@@ -29,9 +29,6 @@ classifiers = [
     "Topic :: Scientific/Engineering :: Information Analysis"
 ]
 
-[project.scripts]
-rational-functions = "rational_functions:main"
-
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
