@@ -526,7 +526,7 @@ class RationalFunction:
             RationalFunction: Rational function object.
         """
 
-        numerator = as_polynomial(numerator)
+        numerator = as_polynomial(numerator).convert()
 
         ztol = ztol if ztol is not None else cls.__approx_opts.ztol
 

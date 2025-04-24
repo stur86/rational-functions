@@ -29,7 +29,7 @@ def test_ratfunc_from_frac(num: Polynomial, den: Polynomial):
 
     assert np.allclose(y1, y2)
     assert isinstance(ratfunc, RationalFunction)
-    assert ratfunc._poly == num // den
+    assert ratfunc._poly == num.convert() // den.convert()
 
 
 @pytest.mark.parametrize(
@@ -50,7 +50,7 @@ def test_ratfunc_from_frac(num: Polynomial, den: Polynomial):
 def test_ratfunc_from_poles(num: Polynomial, poles: list[PolynomialRoot]):
     rf = RationalFunction.from_poles(num, poles)
     assert isinstance(rf, RationalFunction)
-    assert np.allclose(rf.numerator.coef, num.coef)
+    assert np.allclose(rf.numerator.coef, num.convert().coef)
 
     droots = catalogue_roots(rf.denominator)
     droots = sorted(droots, key=lambda r: (r.real, r.imag))
