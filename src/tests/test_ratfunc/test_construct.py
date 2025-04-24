@@ -31,6 +31,25 @@ def test_ratfunc_from_frac(num: Polynomial, den: Polynomial):
     assert ratfunc._poly == num // den
 
 
+def test_ratfunc_from_frac_w_domain():
+    """Test the creation of a rational function from a fraction when polynomials
+    have non-identical domain and window combinations"""
+
+    num = Polynomial([-2, 1], domain=(0, 4), window=(-1, 1))
+    den = Polynomial([1, -3, 1], domain=(-2, 1), window=(-1, 1))
+
+    ratfunc = RationalFunction.from_fraction(num, den)
+
+    assert isinstance(ratfunc, RationalFunction)
+
+    x = np.linspace(-1, 1, 100)
+
+    y1 = ratfunc(x)
+    y2 = num(x) / den(x)
+
+    assert np.allclose(y1, y2)
+
+
 @pytest.mark.parametrize(
     "num, poles",
     [
