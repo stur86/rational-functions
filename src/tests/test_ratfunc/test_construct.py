@@ -10,6 +10,7 @@ from rational_functions.decomp import catalogue_roots
     "num, den",
     [
         (Polynomial([1.0, 2.0]), Polynomial.fromroots([2.0, 4.0])),
+        (Polynomial([1.0, 2.0], domain=(0, 3)), Polynomial.fromroots([2.0, 4.0])),
         (Polynomial([1.0, 2.0]), Polynomial.fromroots([2.0, 4.0, 5.0])),
         (Polynomial([1.0, 2.0]), Polynomial([1.0, 2.0])),
         (Polynomial([1.0]), Polynomial.fromroots([-2.0, 4.0])),
@@ -28,13 +29,17 @@ def test_ratfunc_from_frac(num: Polynomial, den: Polynomial):
 
     assert np.allclose(y1, y2)
     assert isinstance(ratfunc, RationalFunction)
-    assert ratfunc._poly == num // den
+    assert ratfunc._poly == num.convert() // den.convert()
 
 
 @pytest.mark.parametrize(
     "num, poles",
     [
         (Polynomial([1.0, 2.0]), [PolynomialRoot(2.0), PolynomialRoot(4.0)]),
+        (
+            Polynomial([1.0, 2.0], domain=(0, 3)),
+            [PolynomialRoot(2.0), PolynomialRoot(4.0)],
+        ),
         (Polynomial([1.0, 2.0]), [PolynomialRoot(2.0), PolynomialRoot(4.0, 2)]),
         (
             Polynomial([1.0, 2.0]),
@@ -45,7 +50,7 @@ def test_ratfunc_from_frac(num: Polynomial, den: Polynomial):
 def test_ratfunc_from_poles(num: Polynomial, poles: list[PolynomialRoot]):
     rf = RationalFunction.from_poles(num, poles)
     assert isinstance(rf, RationalFunction)
-    assert np.allclose(rf.numerator.coef, num.coef)
+    assert np.allclose(rf.numerator.coef, num.convert().coef)
 
     droots = catalogue_roots(rf.denominator)
     droots = sorted(droots, key=lambda r: (r.real, r.imag))
@@ -53,6 +58,17 @@ def test_ratfunc_from_poles(num: Polynomial, poles: list[PolynomialRoot]):
     for i, p in enumerate(sorted(poles, key=lambda r: (r.real, r.imag))):
         assert np.isclose(droots[i].value, p.value)
         assert droots[i].multiplicity == p.multiplicity
+
+    # Build the denominator polynomial from the roots
+    den = Polynomial.fromroots(
+        np.concatenate([[r.value] * r.multiplicity for r in poles])
+    )
+
+    x = np.linspace(-1, 1, 100)
+    y1 = rf(x)
+    y2 = num(x) / den(x)
+
+    assert np.allclose(y1, y2)
 
 
 @pytest.mark.parametrize(
