@@ -132,7 +132,9 @@ class RationalFunction:
             other_terms = list(other._terms)
             other_poly = other._poly
         elif isinstance(other, Polynomial):
-            other_poly = other
+            other_poly = other.convert(
+                domain=self._poly.domain, window=self._poly.window
+            )
         elif np.isscalar(other):
             # If other is a scalar, convert it to a polynomial
             other_poly = Polynomial([other])
@@ -205,7 +207,9 @@ class RationalFunction:
             other_poly = other._poly
             other_terms = list(other._terms)
         elif isinstance(other, Polynomial):
-            other_poly = other
+            other_poly = other.convert(
+                domain=self._poly.domain, window=self._poly.window
+            )
         elif np.isscalar(other):
             # If other is a scalar, convert it to a polynomial
             other_poly = Polynomial([other])
@@ -276,6 +280,7 @@ class RationalFunction:
         elif isinstance(other, Polynomial):
             # We must divide by the highest order coefficience since the
             # denominator will always be monic
+            other = other.convert(domain=self._poly.domain, window=self._poly.window)
             numerator = (self.numerator + self._poly * self.denominator) / other.coef[
                 -1
             ]
@@ -526,7 +531,7 @@ class RationalFunction:
             RationalFunction: Rational function object.
         """
 
-        numerator = as_polynomial(numerator)
+        numerator = as_polynomial(numerator).convert()
 
         ztol = ztol if ztol is not None else cls.__approx_opts.ztol
 
