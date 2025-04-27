@@ -64,3 +64,40 @@ def fit_ratfun_leastsq(
     den = Polynomial(beta, domain=(xl, xr), window=(-1, 1))
 
     return num, den
+
+
+def smooth_data_tv(
+    x: NDArray[np.number], y: NDArray[np.number], lmb: float
+) -> NDArray[np.number]:
+    r"""Smooth data using a total variation denoising method.
+
+    Args:
+        x (NDArray[np.number]): x coordinates of data points
+        y (NDArray[np.number]): y coordinates of data points
+        lmb (float): Regularization parameter
+
+    Returns:
+        NDArray[np.number]: Smoothed y coordinates
+    """
+
+    N = len(x)
+    # Sort x and y
+    idx = np.argsort(x)
+    x = x[idx]
+    y = y[idx]
+
+    # Average step size
+    h = (x[-1] - x[0]) / (N - 1)
+
+    # Build the finite difference matrix
+    D2 = np.zeros((N - 2, N))
+    for i in range(1, N - 1):
+        # x points
+        x_loc = x[i - 1 : i + 2] - x[i]
+        # Vandermonde matrix
+        V = np.vander(x_loc, 3, increasing=True)
+        # Finite difference vector
+        D2[i - 1, i - 1 : i + 2] = np.linalg.solve(V.T, [0, 0, 2]) * h**2
+
+    # Solve the linear system
+    return np.linalg.solve(np.eye(N) + lmb * D2.T @ D2, y)
