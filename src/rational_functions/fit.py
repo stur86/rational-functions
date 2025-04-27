@@ -39,7 +39,6 @@ def fit_ratfun_leastsq(
     xl, xr = np.min(x), np.max(x)
     c = (xl + xr) / 2
     d = (xr - xl) / 2
-    c, d = 1, 1
     x = (x - c) / d
 
     # Construct Vandermonde matrices
@@ -61,9 +60,7 @@ def fit_ratfun_leastsq(
     # \alpha solution
     alpha = AB @ beta
 
-    num = Polynomial(alpha)
-    den = Polynomial(beta)
+    num = Polynomial(alpha, domain=(xl, xr), window=(-1, 1))
+    den = Polynomial(beta, domain=(xl, xr), window=(-1, 1))
 
-    # Rescale back to original x
-    t = Polynomial([-c / d, 1 / d])
-    return num(t), den(t)
+    return num, den
